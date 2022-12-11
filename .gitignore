@@ -1,0 +1,10 @@
+venv/
+data/
+scratch.py
+*.json
+*.csv
+*.log
+*.js
+.env
+.idea/
+__pycache__/
