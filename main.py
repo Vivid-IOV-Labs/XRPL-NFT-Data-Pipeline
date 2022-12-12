@@ -2,13 +2,15 @@ import asyncio
 import aiohttp
 import logging
 import json
-import httpx
+import httpx  # noqa
 from config import Config
 from xrpl.asyncio.clients import AsyncJsonRpcClient
 from xrpl.models.requests import NFTBuyOffers, NFTSellOffers
 from xrpl.models.response import ResponseStatus
 from writers import LocalFileWriter, AsyncS3FileWriter
-import pandas as pd
+from factory import Factory
+from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens
+import pandas as pd  # noqa
 import time
 import datetime
 
@@ -18,10 +20,11 @@ formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
 file_handler = logging.FileHandler("logger.log")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
-logger.setLevel(logging.INFO)
+factory = Factory()
 
 
 async def get_token_offer(token_id, server):
@@ -78,12 +81,6 @@ async def get_taxon_token_offers(issuer, taxon, token_id):
     return 0
 
 
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
-
-
 async def taxon_offers(taxon, issuer, tokens):
     tokens = [token for token in tokens if token["Taxon"] == taxon]
     logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
@@ -92,37 +89,25 @@ async def taxon_offers(taxon, issuer, tokens):
     for chunk in chunks(tokens, 1000):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
         offers.extend([average for average in averages if average != 0])
-        time.sleep(30)
     data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0}
     if Config.ENVIRONMENT == "LOCAL":
-        LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}", f"{issuer}-{taxon}.json")
+        LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", f"{taxon}.json")
     else:
         await AsyncS3FileWriter(
             Config.PRICE_DUMP_BUCKET
         ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}-{taxon}.json", data)
 
 
-def get_supported_issuers():
-    nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
-    supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
-    return supported_issuers
-
-
-# async def issuer_pricing(issuer, tokens):
-#     taxons = get_issuer_unique_taxons(tokens)
-#     logger.info(f"Running for Issuer With {len(taxons)} Taxons")
-#     await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
-
 
 async def dump_issuers_nfts():
-    supported_issuers = get_supported_issuers()
+    supported_issuers = factory.supported_issuers
     for chunk in chunks(supported_issuers, 10):
         await asyncio.gather(*[dump_issuer_nfts(issuer) for issuer in chunk])
         time.sleep(60)
 
 
 async def dump_issuers_taxons():
-    supported_issuers = get_supported_issuers()
+    supported_issuers = factory.supported_issuers
     taxons = []
     for chunk in chunks(supported_issuers, 10):
         chunk_taxons = await asyncio.gather(*[get_issuer_taxons(issuer) for issuer in chunk])
@@ -136,9 +121,19 @@ async def dump_issuers_taxons():
         ).write_json("taxon.json", taxons)
 
 
+async def dump_issuer_taxon_offers(issuer):
+    taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT)
+    tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT)
+    logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
+    await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
+
+
+
+
 async def main():
     start = time.monotonic()
-    await dump_issuers_taxons()
+    await dump_issuers_nfts()
+    await dump_issuer_taxon_offers("rDxThQhDkAaas4Mv22DWxUsZUZE1MfvRDf")
     print(f"Executed in {time.monotonic() - start}\n\n")
     # nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
     # supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
