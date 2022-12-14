@@ -1,6 +1,6 @@
 org: peerkatserverless
-app: python-serverless
-service: python-serverless-xls20`
+app: python-serverless-xls20
+service: python-serverless-v2
 
 frameworkVersion: '3'
 
@@ -13,7 +13,7 @@ provider:
     role: arn:aws:iam::366877760811:role/lambda-role-peerkat-nft-data-serverless
   runtime: python3.8
   layers:
-    - arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python38-Arm64:1
+    - arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-p38-pandas:10
   architecture: x86_64
 
 package:
@@ -36,10 +36,21 @@ package:
     - '!logger.log'
 
 functions:
-  nft-data-processor:
-    handler: handlers.nft_data_handler
-    name: nft-processor-${sls:stage}
+  issuers-nft-dumps:
+    handler: handlers.issuers_nft_dumps
+    events:
+      # Invoke Lambda function every hour
+      - schedule: rate(1 hour)
     timeout: 900
+#  issuers-nft-dump:
+#    handler: handlers.issuers_nft_dumps
+#    name: issuers-nft-dump-${sls:stage}
+#    timeout: 900
+#  issuers-taxon-dump:
+#    handler: handlers.issuers_taxon_dumps
+#    name: issuers-taxon-dump-${sls:stage}
+#    timeout: 900
+
 
 plugins:
   - serverless-python-requirements

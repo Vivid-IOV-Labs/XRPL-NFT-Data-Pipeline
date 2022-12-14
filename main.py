@@ -21,9 +21,9 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler("logger.log")
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+# file_handler = logging.FileHandler("logger.log")
+# file_handler.setFormatter(formatter)
+# logger.addHandler(file_handler)
 factory = Factory()
 
 
@@ -128,22 +128,21 @@ async def dump_issuer_taxon_offers(issuer):
     await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
 
 
-
-
-async def main():
-    start = time.monotonic()
-    await dump_issuers_nfts()
-    await dump_issuer_taxon_offers("rDxThQhDkAaas4Mv22DWxUsZUZE1MfvRDf")
-    print(f"Executed in {time.monotonic() - start}\n\n")
-    # nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
-    # supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
-    # xls20_nfts = json.load(open("nfts.json", "r"))
-    # target_nfts = [(issuer, xls20_nfts[issuer]) for issuer in xls20_nfts if issuer in supported_issuers]
-    # start = time.monotonic()
-    # for issuer, tokens in target_nfts[:5]:
-    #     await issuer_pricing(issuer, tokens)
-    #     logger.info(f"Completed Running For Issuer {issuer}. Going To Sleep For 60secs...\n\n")
-    #     time.sleep(60)
-    # print(f"Executed in {time.monotonic() - start}\n\n")
-
-asyncio.run(main())
+# async def main():
+#     start = time.monotonic()
+#     # await dump_issuers_nfts()
+#     await dump_issuers_taxons()
+#     # await dump_issuer_taxon_offers("rDxThQhDkAaas4Mv22DWxUsZUZE1MfvRDf")
+#     print(f"Executed in {time.monotonic() - start}\n\n")
+#     # nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
+#     # supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
+#     # xls20_nfts = json.load(open("nfts.json", "r"))
+#     # target_nfts = [(issuer, xls20_nfts[issuer]) for issuer in xls20_nfts if issuer in supported_issuers]
+#     # start = time.monotonic()
+#     # for issuer, tokens in target_nfts[:5]:
+#     #     await issuer_pricing(issuer, tokens)
+#     #     logger.info(f"Completed Running For Issuer {issuer}. Going To Sleep For 60secs...\n\n")
+#     #     time.sleep(60)
+#     # print(f"Executed in {time.monotonic() - start}\n\n")
+#
+# asyncio.run(main())
