@@ -18,7 +18,7 @@ class Factory:
     @property
     def supported_issuers(self):
         if self._supported_issuers:
-            return self.supported_issuers
+            return self._supported_issuers
         nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
         supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
         self._supported_issuers = supported_issuers

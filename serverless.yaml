@@ -36,22 +36,72 @@ package:
     - '!logger.log'
 
 functions:
-  issuers-nft-dumps:
-    handler: handlers.issuers_nft_dumps
-    events:
-      # Invoke Lambda function every hour
-      - schedule: rate(1 hour)
-    timeout: 900
-#  issuers-nft-dump:
+#  issuers-nft-dumps:
 #    handler: handlers.issuers_nft_dumps
-#    name: issuers-nft-dump-${sls:stage}
+#    events:
+#      # Invoke Lambda function every hour
+#      - schedule: rate(1 hour)
 #    timeout: 900
-#  issuers-taxon-dump:
-#    handler: handlers.issuers_taxon_dumps
-#    name: issuers-taxon-dump-${sls:stage}
-#    timeout: 900
+  issuers-nft-dump:
+    handler: handlers.issuers_nft_dumps
+    name: issuers-nft-dump-${sls:stage}
+    timeout: 900
+  issuers-taxon-dump:
+    handler: handlers.issuers_taxon_dumps
+    name: issuers-taxon-dump-${sls:stage}
+    timeout: 900
 
+stepFunctions:
+  stateMachines:
+    IssuersNFTDataDump:
+      name: IssuersNFTDataDump${sls:stage}
+      definition:
+        StartAt: NFTDumps
+        States:
+#          NFTDumps:
+#            Type: Task
+#            Resource:
+#              Fn::GetAtt: [ price, Arn ]
+#            Next: JsonDumps
+          NFTDumps:
+            Type: Parallel
+            End: true
+            Branches:
+              - StartAt: IssuerNFTDumps
+                States:
+                  IssuerNFTDumps:
+                    Type: Task
+                    Resource:
+                      Fn::GetAtt: [ issuers-nft-dump, Arn ]
+                    End: true
+              - StartAt: IssuerTaxonDumps
+                States:
+                  IssuerTaxonDumps:
+                    Type: Task
+                    Resource:
+                      Fn::GetAtt: [ issuers-taxon-dump, Arn ]
+                    End: true
+#              - StartAt: Table
+#                States:
+#                  Table:
+#                    Type: Task
+#                    Resource:
+#                      Fn::GetAtt: [ table, Arn ]
+#                    End: true
+      events:
+        - schedule: rate(1 hour)
+#        - eventBridge:
+#            event:
+#              source:
+#                - aws.s3
+#              detail-type:
+#                - Object Created
+#              detail:
+#                bucket:
+#                  name:
+#                    - peerkat-data-dumps-raw
 
 plugins:
   - serverless-python-requirements
   - serverless-dotenv-plugin
+  - serverless-step-functions
