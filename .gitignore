@@ -8,3 +8,4 @@ scratch.py
 .env
 .idea/
 __pycache__/
+/.serverless/

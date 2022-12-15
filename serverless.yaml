@@ -36,12 +36,6 @@ package:
     - '!logger.log'
 
 functions:
-#  issuers-nft-dumps:
-#    handler: handlers.issuers_nft_dumps
-#    events:
-#      # Invoke Lambda function every hour
-#      - schedule: rate(1 hour)
-#    timeout: 900
   issuers-nft-dump:
     handler: handlers.issuers_nft_dumps
     name: issuers-nft-dump-${sls:stage}
@@ -49,6 +43,10 @@ functions:
   issuers-taxon-dump:
     handler: handlers.issuers_taxon_dumps
     name: issuers-taxon-dump-${sls:stage}
+    timeout: 900
+  issuer-nft-pricing:
+    handler: handlers.issuer_taxon_average_price_dumps
+    name: issuers-nft-pricing-${sls:stage}
     timeout: 900
 
 stepFunctions:
@@ -58,11 +56,6 @@ stepFunctions:
       definition:
         StartAt: NFTDumps
         States:
-#          NFTDumps:
-#            Type: Task
-#            Resource:
-#              Fn::GetAtt: [ price, Arn ]
-#            Next: JsonDumps
           NFTDumps:
             Type: Parallel
             End: true
@@ -81,25 +74,10 @@ stepFunctions:
                     Resource:
                       Fn::GetAtt: [ issuers-taxon-dump, Arn ]
                     End: true
-#              - StartAt: Table
-#                States:
-#                  Table:
-#                    Type: Task
-#                    Resource:
-#                      Fn::GetAtt: [ table, Arn ]
-#                    End: true
+
       events:
-        - schedule: rate(1 hour)
-#        - eventBridge:
-#            event:
-#              source:
-#                - aws.s3
-#              detail-type:
-#                - Object Created
-#              detail:
-#                bucket:
-#                  name:
-#                    - peerkat-data-dumps-raw
+        - schedule:
+            rate: cron(0/60 * ? * * *)
 
 plugins:
   - serverless-python-requirements

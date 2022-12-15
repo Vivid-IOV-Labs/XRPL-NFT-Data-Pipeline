@@ -21,9 +21,6 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
-# file_handler = logging.FileHandler("logger.log")
-# file_handler.setFormatter(formatter)
-# logger.addHandler(file_handler)
 factory = Factory()
 
 
@@ -47,7 +44,7 @@ async def dump_issuer_nfts(issuer):
         async with session.get(f'https://api.xrpldata.com/api/v1/xls20-nfts/issuer/{issuer}') as response:
             content = await response.content.read()
             data = json.loads(content)["data"]
-            now = datetime.datetime.now()
+            now = datetime.datetime.utcnow()
             if Config.ENVIRONMENT == "LOCAL":
                 LocalFileWriter().write_json(
                     data,
@@ -82,11 +79,11 @@ async def get_taxon_token_offers(issuer, taxon, token_id):
 
 
 async def taxon_offers(taxon, issuer, tokens):
-    tokens = [token for token in tokens if token["Taxon"] == taxon]
+    tokens = [token for token in tokens if token["Taxon"] == taxon][:1000]  # temporary
     logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
-    now = datetime.datetime.now()
+    now = datetime.datetime.utcnow()
     offers = []
-    for chunk in chunks(tokens, 1000):
+    for chunk in chunks(tokens, 500):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
         offers.extend([average for average in averages if average != 0])
     data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0}
@@ -95,7 +92,8 @@ async def taxon_offers(taxon, issuer, tokens):
     else:
         await AsyncS3FileWriter(
             Config.PRICE_DUMP_BUCKET
-        ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}-{taxon}.json", data)
+        ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/{taxon}.json", data)
+    return data["average_price"]
 
 
 
@@ -122,27 +120,16 @@ async def dump_issuers_taxons():
 
 
 async def dump_issuer_taxon_offers(issuer):
-    taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT)
-    tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT)
+    now = datetime.datetime.utcnow()
+    taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
+    tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
-    await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
-
-
-# async def main():
-#     start = time.monotonic()
-#     # await dump_issuers_nfts()
-#     await dump_issuers_taxons()
-#     # await dump_issuer_taxon_offers("rDxThQhDkAaas4Mv22DWxUsZUZE1MfvRDf")
-#     print(f"Executed in {time.monotonic() - start}\n\n")
-#     # nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
-#     # supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
-#     # xls20_nfts = json.load(open("nfts.json", "r"))
-#     # target_nfts = [(issuer, xls20_nfts[issuer]) for issuer in xls20_nfts if issuer in supported_issuers]
-#     # start = time.monotonic()
-#     # for issuer, tokens in target_nfts[:5]:
-#     #     await issuer_pricing(issuer, tokens)
-#     #     logger.info(f"Completed Running For Issuer {issuer}. Going To Sleep For 60secs...\n\n")
-#     #     time.sleep(60)
-#     # print(f"Executed in {time.monotonic() - start}\n\n")
-#
-# asyncio.run(main())
+    taxons = taxons[:500]  # temporary
+    average_prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
+    data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0}
+    if Config.ENVIRONMENT == "LOCAL":
+        LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", "price.json")
+    else:
+        await AsyncS3FileWriter(
+            Config.PRICE_DUMP_BUCKET
+        ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
