@@ -38,8 +38,17 @@ class AsyncS3FileWriter:
             await s3.upload_fileobj(buffer, self.bucket, path)
         logger.info(f"File Uploaded to {path}")
 
+    async def write_buffer(self, path, buffer):
+        await self._write(path, buffer)
+
     async def write_json(self, path, obj):
         to_bytes = json.dumps(obj, indent=4).encode('utf-8')
         buffer = BytesIO()
         buffer.write(to_bytes)
+        await self._write(path, buffer)
+
+    async def write_df(self, df, path, file_type):
+        buffer = BytesIO()
+        if file_type == "csv":
+            df.to_csv(buffer, index=False)
         await self._write(path, buffer)

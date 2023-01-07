@@ -7,6 +7,7 @@ class Factory:
 
     def __init__(self):
         self._supported_issuers = None
+        self._issuers_df = None
 
     @staticmethod
     def get_writer(bucket=""):
@@ -23,3 +24,11 @@ class Factory:
         supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
         self._supported_issuers = supported_issuers
         return self._supported_issuers
+
+    @property
+    def issuers_df(self):
+        if self._issuers_df:
+            return self._issuers_df
+        nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
+        self._issuers_df = nft_sheet_df
+        return self._issuers_df
