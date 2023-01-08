@@ -208,6 +208,7 @@ async def xls20_raw_data_dump():
     await AsyncS3FileWriter(
         Config.RAW_DUMP_BUCKET
     ).write_df(final_df, f"{last_hour}.csv", "csv")
+    invoke_table_dump()
     # await AsyncS3FileWriter(
     #     Config.RAW_DUMP_BUCKET
     # ).write_df(final_df, f"{last_hour_2}.csv", "csv")
