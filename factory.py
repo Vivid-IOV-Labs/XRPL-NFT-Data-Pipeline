@@ -7,7 +7,7 @@ class Factory:
 
     def __init__(self):
         self._supported_issuers = None
-        self._issuers_df = None
+        self._issuers_df = pd.DataFrame()
 
     @staticmethod
     def get_writer(bucket=""):
@@ -27,7 +27,7 @@ class Factory:
 
     @property
     def issuers_df(self):
-        if self._issuers_df:
+        if not self._issuers_df.empty:
             return self._issuers_df
         nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
         self._issuers_df = nft_sheet_df

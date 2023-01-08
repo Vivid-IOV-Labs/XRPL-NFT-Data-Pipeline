@@ -36,11 +36,15 @@ async def get_token_offer(token_id, server):
     sell_offer_request = NFTSellOffers(nft_id=token_id)
     buy_offers = await client.request(buy_offer_request)
     sell_offers = await client.request(sell_offer_request)
+
     offers = []
     buy_offers = buy_offers.result["offers"] if buy_offers.status == ResponseStatus.SUCCESS else []
     sell_offers = sell_offers.result["offers"] if sell_offers.status == ResponseStatus.SUCCESS else []
-    offers.extend([float(offer["amount"]) for offer in buy_offers if type(offer["amount"]) != dict])
-    offers.extend([float(offer["amount"]) for offer in sell_offers if type(offer["amount"]) != dict])
+    buy_offers_amount_arr = [float(offer["amount"]) for offer in buy_offers if type(offer["amount"]) != dict]
+    sell_offers_amount_arr = [float(offer["amount"]) for offer in sell_offers if type(offer["amount"]) != dict]
+    highest_buy_offer = max(buy_offers_amount_arr) if buy_offers_amount_arr else 0
+    lowest_sell_offer = min(sell_offers_amount_arr) if sell_offers_amount_arr else 0
+    offers.extend([highest_buy_offer, lowest_sell_offer])
     return offers
 
 
@@ -88,21 +92,21 @@ async def get_taxon_token_offers(issuer, taxon, token_id):
 
 
 async def taxon_offers(taxon, issuer, tokens):
-    tokens = [token for token in tokens if token["Taxon"] == taxon][:1000]  # temporary
+    tokens = [token for token in tokens if token["Taxon"] == taxon][:500]  # temporary
     logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
     now = datetime.datetime.utcnow()
     offers = []
-    for chunk in chunks(tokens, 500):
+    for chunk in chunks(tokens, 250):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
         offers.extend([average for average in averages if average != 0])
-    data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0}
+    data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0, "floor_price": min(offers) if offers else 0}
     if Config.ENVIRONMENT == "LOCAL":
         LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", f"{taxon}.json")
     else:
         await AsyncS3FileWriter(
             Config.PRICE_DUMP_BUCKET
         ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/{taxon}.json", data)
-    return data["average_price"]
+    return data["floor_price"]
 
 
 async def dump_issuers_nfts():
@@ -137,9 +141,9 @@ async def dump_issuer_taxon_offers(issuer):
     taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
-    taxons = taxons[:500]  # temporary
+    taxons = taxons[:10]  # temporary
     average_prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
-    data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0}
+    data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0, "floor_price": min(average_prices) if average_prices else 0}
     if Config.ENVIRONMENT == "LOCAL":
         LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", "price.json")
     else:
@@ -183,17 +187,17 @@ def invoke_table_dump():
 async def xls20_raw_data_dump():
     issuers = factory.supported_issuers
     last_hour = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
-    last_hour_2 = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime('%Y-%m-%d-%H')
+    # last_hour_2 = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime('%Y-%m-%d-%H')
     supply = await read_json(Config.NFT_DUMP_BUCKET, "supply.json", Config)
     supply_df = pd.DataFrame(supply)
     issuers_df = factory.issuers_df
-    logger.info(f"fetched issuers {issuers}")
+    # logger.info(f"fetched issuers {issuers}")
     prices = await asyncio.gather(*[read_json(Config.PRICE_DUMP_BUCKET, f"{last_hour}/{issuer}/price.json", Config) for issuer in issuers])
-    logger.info("fetched prices")
+    # logger.info("fetched prices")
     price_df = pd.DataFrame([price for price in prices if price is not None])
     supply_df.rename(columns={"issuer": "ISSUER", "supply": "SUPPLY", "circulation": "CIRCULATION"}, inplace=True)
     issuers_df.rename(columns={"Issuer_Account": "ISSUER", "Project_Name": "NAME", "Website_URL": "WEBSITE", "Twitter_URL": "TWITTER"}, inplace=True)
-    price_df.rename(columns={"issuer": "ISSUER", "average_price": "PRICEXRP"}, inplace=True)
+    price_df.rename(columns={"issuer": "ISSUER", "floor_price": "PRICEXRP"}, inplace=True)
     merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])
     final_merge = merged_1.merge(issuers_df, how="inner", on=["ISSUER"])
     final_df = final_merge[["ISSUER", "NAME", "WEBSITE", "TWITTER", "PRICEXRP", "SUPPLY", "CIRCULATION"]].copy()
