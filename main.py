@@ -92,11 +92,11 @@ async def get_taxon_token_offers(issuer, taxon, token_id):
 
 
 async def taxon_offers(taxon, issuer, tokens):
-    tokens = [token for token in tokens if token["Taxon"] == taxon][:500]  # temporary
+    tokens = [token for token in tokens if token["Taxon"] == taxon]
     logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
     now = datetime.datetime.utcnow()
     offers = []
-    for chunk in chunks(tokens, 250):
+    for chunk in chunks(tokens, 500):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
         offers.extend([average for average in averages if average != 0])
     data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0, "floor_price": min(offers) if offers else 0}
@@ -141,7 +141,7 @@ async def dump_issuer_taxon_offers(issuer):
     taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
-    taxons = taxons[:10]  # temporary
+    # taxons = taxons[:10]  # temporary
     average_prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
     data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0, "floor_price": min(average_prices) if average_prices else 0}
     if Config.ENVIRONMENT == "LOCAL":

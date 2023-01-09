@@ -47,6 +47,7 @@ functions:
   issuer-nft-pricing:
     handler: handlers.issuer_taxon_average_price_dumps
     name: issuers-nft-pricing-${sls:stage}
+    memorySize: 2048
     timeout: 900
   issuers-nft-pricing-invoker:
     handler: handlers.issuer_pricing_invoker
