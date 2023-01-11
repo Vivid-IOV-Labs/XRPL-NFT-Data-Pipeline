@@ -15,8 +15,8 @@ async def aiotest():
     # await dump_issuers_nfts()
     # await dump_issuers_taxons()
     # await dump_issuer_taxon_offers("r9ZW5tjbhKFLWxs4j1KqF61YSHAyDvo52D")
-    await xls20_raw_data_dump()
-    # await table()
+    # await xls20_raw_data_dump()
+    await table()
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 

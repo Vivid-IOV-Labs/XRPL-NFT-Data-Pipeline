@@ -96,7 +96,7 @@ async def taxon_offers(taxon, issuer, tokens):
     logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
     now = datetime.datetime.utcnow()
     offers = []
-    for chunk in chunks(tokens, 500):
+    for chunk in chunks(tokens, 50):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
         offers.extend([average for average in averages if average != 0])
     data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0, "floor_price": min(offers) if offers else 0}
@@ -142,7 +142,10 @@ async def dump_issuer_taxon_offers(issuer):
     tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
     # taxons = taxons[:10]  # temporary
-    average_prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in taxons])
+    average_prices = []
+    for chunk in chunks(taxons, 50):
+        prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in chunk])
+        average_prices.extend(prices)
     data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0, "floor_price": min(average_prices) if average_prices else 0}
     if Config.ENVIRONMENT == "LOCAL":
         LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", "price.json")
@@ -261,9 +264,12 @@ async def table():
     tweets_list = []
     tweets_list_previous = []
     twitter_list = df.twitter.unique()
-
+    # print(twitter_list)
     for name in twitter_list:
-        for tweet in twitter_scrapper.TwitterSearchScraper("from:{}".format(name)).get_items():
+        # print(name)
+        if type(name) == float:
+            continue
+        for tweet in twitter_scrapper.TwitterUserScraper(username=name, top=True).get_items():
             diff = (current_time - tweet.date.replace(tzinfo=None)).total_seconds()
             if diff < 0:
                 continue

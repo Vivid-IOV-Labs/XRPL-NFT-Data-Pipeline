@@ -1,7 +1,8 @@
-from main import dump_issuers_nfts, dump_issuers_taxons, dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, xls20_raw_data_dump, table, invoke_csv_dump
+from main import dump_issuers_nfts, dump_issuers_taxons, dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, xls20_raw_data_dump, table, invoke_csv_dump, chunks
 import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 
 logger = logging.getLogger("app_log")
 
@@ -32,6 +33,14 @@ def table_dump(event, context):
 
 def issuer_pricing_invoker(event, context):
     issuers = factory.supported_issuers
-    with ThreadPoolExecutor(max_workers=len(issuers)) as executor:
-        executor.map(invoke_issuer_pricing_dump, issuers)
+    for chunk in chunks(issuers, 3):
+        threads = []
+        for issuer in chunk:
+            thread = Thread(target=invoke_issuer_pricing_dump, args=(issuer,))
+            threads.append(thread)
+            thread.start()
+        for thread in threads:
+            thread.join()
+    # with ThreadPoolExecutor(max_workers=len(issuers)) as executor:
+    #     executor.map(invoke_issuer_pricing_dump, issuers)
     invoke_csv_dump()
