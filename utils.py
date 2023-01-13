@@ -3,6 +3,10 @@ import datetime
 import boto3
 import aioboto3
 import snscrape.modules.twitter as twitter_scrapper
+import pandas as pd
+import numpy as np
+from config import Config
+from io import StringIO
 
 
 def chunks(lst, n):
@@ -20,7 +24,6 @@ def fetch_issuer_taxons(issuer, environment, bucket, access_key, secret_key):
         text = result["Body"].read()
         taxons = json.loads(text.decode())
         return [taxon["taxons"] for taxon in taxons if taxon["issuer"] == issuer][0]
-
 
 
 def fetch_issuer_tokens(issuer, environment, bucket, access_key, secret_key):
@@ -63,3 +66,98 @@ def twitter_pics(name):
     except Exception as e:
         print(e)
         return "", ""
+
+
+def file_to_time(t):
+    # print(t)
+    # print(t[:4], t[5:7], t[8:10], t[11:13])
+    return datetime.datetime(int(t[:4]), int(t[5:7]), int(t[8:10]), int(t[11:13]))
+
+
+def cap1(col: str):
+    return "_".join([x.title() for x in col.split("_")])
+
+def read_df(filename):
+    df = pd.read_csv(filename)
+    df.columns = [cap1(x) for x in df.columns]
+    df = df[df["Twitter"].notna()]
+    df["Name"] = df["Name"].str.strip()
+    return df
+
+
+def get_pct(df, t):
+    first_record = df.head(1).to_dict(orient="list")
+    first_unix = first_record["x"][0]
+    t0 = int(df.loc[df["x"] == t]["y"])
+    t1 = int(df.loc[df["x"] == t - 24 * 60 * 60]["y"])
+    # t2 = int(df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"])
+    # t3 = int(df.loc[df["x"] == first_unix]["y"])
+
+    pct_dic = {
+        "currentValue": t0,
+        "percentageChanges": {
+            "day": {
+                "valueDifference": t0 - t1,
+                "percentageChange": (t0 - t1) / (t1 * 100),
+                "directionOfChange": int(np.sign(t0 - t1)),
+            },
+            # "week": {
+            #     "valueDifference": t0 - t2,
+            #     "percentageChange": (t0 - t2) / (t2 * 100),
+            #     "directionOfChange": int(np.sign(t0 - t2)),
+            # },
+            # "month": {
+            #     "valueDifference": t0 - t3,
+            #     "percentageChange": (t0 - t3) / (t3 * 100),
+            #     "directionOfChange": int(np.sign(t0 - t3)),
+            # },
+        },
+    }
+    return json.dumps(pct_dic)
+
+
+def get_s3_resource():
+    s3 = boto3.resource("s3", aws_access_key_id=Config.ACCESS_KEY_ID, aws_secret_access_key=Config.SECRET_ACCESS_KEY)
+    return s3
+
+def write_df(df: pd.DataFrame, path: str, file_type: str, **kwargs):
+    if Config.ENVIRONMENT == "LOCAL":
+        if path.startswith("data") is False:
+            path = f"data/csv_dumps/{path}" if file_type == "csv" else f"data/json_dumps/{path}"
+        if file_type == "csv":
+            df.to_csv(path, index=False)
+        elif file_type == "json":
+            df.to_json(path, indent=4, orient="records")
+    else:
+        s3 = get_s3_resource()
+        buffer = StringIO()
+        if file_type == "csv":
+            df.to_csv(buffer, index=False)  # noqa
+        if file_type == "json":
+            df.to_json(buffer, indent=4, orient="records")  # noqa
+        s3.Object(kwargs["bucket"], path).put(Body=buffer.getvalue())
+
+
+def get_day_df(df: pd.DataFrame, max_points: int):
+    return df[-max_points:]
+
+
+def get_weekly_df(df: pd.DataFrame, max_points: int):
+    return df[-max_points:]
+
+
+def get_monthly_df(df: pd.DataFrame, max_points: int):
+    last_item = df.tail(1).to_dict(orient="list")
+    current_time, current_value = last_item["x"][0], last_item["y"][0]
+    points = [{"x": current_time, "y": current_value}]
+    points_traversed = 1
+    while points_traversed < max_points:
+        try:
+            to_append = df[df["x"] == current_time - 3600].to_dict(orient="list")
+            points.append({"x": to_append["x"][0], "y": to_append["y"][0]})
+        except Exception as e:
+            print(f"Error extracting value for timestamp {current_time - 3600}: {e}")
+            pass
+        current_time -= 3600
+        points_traversed += 1
+    return pd.DataFrame(points[::-1])

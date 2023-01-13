@@ -60,6 +60,10 @@ functions:
     handler: handlers.table_dump
     name: nft-table-dump-${sls:stage}
     timeout: 900
+  nft-graph-dump:
+    handler: handlers.graph_dump
+    name: nft-graph-dump-${sls:stage}
+    timeout: 900
 
 stepFunctions:
   stateMachines:

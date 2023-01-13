@@ -1,7 +1,9 @@
-from main import dump_issuers_nfts, dump_issuers_taxons, dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, xls20_raw_data_dump, table, invoke_csv_dump, chunks
+from main import dump_issuers_nfts, dump_issuers_taxons, dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, xls20_raw_data_dump, invoke_csv_dump, chunks
+from table import table
+from graph import graph
 import logging
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 
 logger = logging.getLogger("app_log")
@@ -29,6 +31,10 @@ def raw_data_dump(event, context):
 def table_dump(event, context):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(table())
+
+
+def graph_dump(event, context):
+    graph()
 
 
 def issuer_pricing_invoker(event, context):

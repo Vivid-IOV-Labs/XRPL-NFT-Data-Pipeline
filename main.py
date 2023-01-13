@@ -1,5 +1,4 @@
 import asyncio
-from io import StringIO, BytesIO
 import aiohttp
 import logging
 import json
@@ -12,10 +11,8 @@ from xrpl.models.requests import NFTBuyOffers, NFTSellOffers
 from xrpl.models.response import ResponseStatus
 from writers import LocalFileWriter, AsyncS3FileWriter
 from factory import Factory
-import snscrape.modules.twitter as twitter_scrapper
 from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens, read_json, to_snake_case, twitter_pics
 import pandas as pd  # noqa
-import numpy as np
 import time
 import datetime
 
@@ -187,6 +184,17 @@ def invoke_table_dump():
     )
     logger.info(resp)
 
+
+def invoke_graph_dump():
+    logger.info("Invoking Graph Dump")
+    lambda_client = boto3.client("lambda", region_name="eu-west-2", aws_access_key_id=Config.ACCESS_KEY_ID,
+                                 aws_secret_access_key=Config.SECRET_ACCESS_KEY)
+    resp = lambda_client.invoke(
+        FunctionName='nft-graph-dump-dev',
+        InvocationType='Event',
+    )
+    logger.info(resp)
+
 async def xls20_raw_data_dump():
     issuers = factory.supported_issuers
     last_hour = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
@@ -211,122 +219,12 @@ async def xls20_raw_data_dump():
     await AsyncS3FileWriter(
         Config.RAW_DUMP_BUCKET
     ).write_df(final_df, f"{last_hour}.csv", "csv")
+    await AsyncS3FileWriter(
+        Config.RAW_DUMP_BUCKET
+    ).write_df(price_df, f"{last_hour}_price.csv", "csv")
     invoke_table_dump()
+    invoke_graph_dump()
     # await AsyncS3FileWriter(
     #     Config.RAW_DUMP_BUCKET
     # ).write_df(final_df, f"{last_hour_2}.csv", "csv")
 
-async def table():
-    current_time = datetime.datetime.utcnow()
-    # day_ago = current_time - datetime.timedelta(days=1)
-    current = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
-    previous = (datetime.datetime.strptime(current, '%Y-%m-%d-%H') - datetime.timedelta(days=1)).strftime('%Y-%m-%d-%H')
-    df_previous = pd.read_csv(f"s3://{Config.RAW_DUMP_BUCKET}/{previous}.csv")
-    df_previous.columns = [to_snake_case(col) for col in df_previous.columns]
-    df = pd.read_csv(f"s3://{Config.RAW_DUMP_BUCKET}/{current}.csv")
-    df.columns = [to_snake_case(x) for x in df.columns]
-    df = df[df["twitter"].notna()]
-    df["name"] = df["name"].str.strip()
-
-    df["total_supply"] = df["supply"]
-    df["circulating_supply"] = df["circulation"]
-
-    df = pd.merge(df, df_previous, on="issuer", how="outer", suffixes=("", "_previous"))
-
-    df["promoted"] = "false"
-
-    df["id"] = df.index + 1
-
-    df["logo_url"], df["banner_url"] = zip(*df["twitter"].apply(twitter_pics))
-
-    df["project"] = df[["issuer", "logo_url", "banner_url", "name", "promoted"]].apply(
-        lambda x: x.to_json(), axis=1
-    )
-
-
-    df["value"] = df["holder_count"].fillna(0.0).astype(int)
-    df["direction_of_change"] = np.sign(df["holder_count"] - df["holder_count_previous"]).fillna(0.0).astype(int)
-    df["holder_count"] = df[["value", "direction_of_change"]].apply(lambda x: x.to_json(), axis=1)
-
-    df["value"] = df["pricexrp"]
-    df["percentage_change"] = round(abs((df["pricexrp"] - df["pricexrp_previous"]) / df["pricexrp_previous"] * 100), 2)
-    df["direction_of_change"] = np.sign(df["pricexrp"] - df["pricexrp_previous"]).fillna(0.0).astype(int)
-    df["price_xrp"] = df[["value", "percentage_change", "direction_of_change"]].apply(lambda x: x.to_json(), axis=1)
-
-    df["market_cap"] = df["market_cap"].astype(float)
-    df = df.sort_values(by=["market_cap"], ascending=False)
-    df = df.reset_index()
-    df["rank"] = df.index + 1
-    df["value"] = df["market_cap"]
-    df["direction_of_change"] = np.sign(df["market_cap"] - df["market_cap_previous"]).fillna(0.0).astype(int)
-    df["market_cap"] = df[["value", "direction_of_change"]].apply(lambda x: x.to_json(), axis=1)
-
-    tweets_list = []
-    tweets_list_previous = []
-    twitter_list = df.twitter.unique()
-    # print(twitter_list)
-    for name in twitter_list:
-        # print(name)
-        if type(name) == float:
-            continue
-        for tweet in twitter_scrapper.TwitterUserScraper(username=name, top=True).get_items():
-            diff = (current_time - tweet.date.replace(tzinfo=None)).total_seconds()
-            if diff < 0:
-                continue
-            if diff >= 3600 * 24 * 8:
-                break
-            if diff < 3600 * 24 * 7:
-                tweets_list.append([name, 1, tweet.retweetCount, tweet.likeCount])
-            if diff >= 3600 * 24 * 1 and diff < 3600 * 24 * 8:  # noqa
-                tweets_list_previous.append([name, 1, tweet.retweetCount, tweet.likeCount])
-
-    tweets = pd.DataFrame(tweets_list, columns=["twitter", "tweets", "retweets", "likes"])
-    sum = tweets.groupby("twitter").sum().reset_index(level=0)  # noqa
-
-    tweets_previous = pd.DataFrame(
-        tweets_list, columns=["twitter", "tweets_previous", "retweets_previous", "likes_previous"]
-    )
-    sum_previous = tweets_previous.groupby("twitter").sum().reset_index(level=0)
-    df = pd.merge(df, sum, on="twitter", how="outer")
-    df = pd.merge(df, sum_previous, on="twitter", how="outer")
-    df["re_tweets"] = df["retweets"]
-
-    df["value"] = (df["tweets"] + df["retweets"] + df["likes"]).fillna(0.0).astype(int)
-    df["percentage"] = round(df["value"] / df["value"].max(), 2)
-    df["social_previous"] = (
-        (df["tweets_previous"] + df["retweets_previous"] + df["likes_previous"]).fillna(0.0).astype(int)
-    )
-
-    df["direction_of_change"] = np.sign(df["value"] - df["social_previous"]).fillna(0.0).astype(int)
-    df["social_activity"] = df[["value", "percentage", "direction_of_change"]].apply(lambda x: x.to_json(), axis=1)
-    output = df[
-        [
-            "id",
-            "rank",
-            "project",
-            "holder_count",
-            "social_activity",
-            "price_xrp",
-            "market_cap",
-            "tweets",
-            "re_tweets",
-            "likes",
-            "total_supply",
-            "circulating_supply",
-        ]
-    ]
-    buffer = StringIO()
-    output.to_json(buffer, orient="records", indent=4)
-    content = buffer.getvalue()
-    content = (
-        content.replace('"{', "{")
-        .replace('}"', "}")
-        .replace("\\", "")
-        .replace('"false"', "false")
-        .replace('"true"', "true")
-    )
-    new_b = BytesIO()
-    new_b.write(bytes(content, 'utf-8'))
-    await AsyncS3FileWriter(
-        Config.DATA_DUMP_BUCKET
-    ).write_buffer("latest/NFT_Collections_Table.json", new_b)
