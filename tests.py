@@ -41,4 +41,13 @@ if __name__ == "__main__":
         invoke_table_dump()
         invoke_csv_dump()
     else:
+        # import tweepy
+        #
+        # auth = tweepy.OAuth2AppHandler("W7ELEojTfblc304cq99tJbDGl", "2NWrwduhunhfbSqF2c7Es5e9bBW5fwN0zjGOXbYPdqjaDqsKc4")
+        # api = tweepy.API(auth)
+        #
+        # tweets = api.user_timeline(screen_name="BearableguyClub", count=100)
+        # for tweet in tweets:
+        #     print()
+        #     print("\n")
         logger.error("Pass which test to run")

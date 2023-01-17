@@ -20,3 +20,5 @@ class Config:
     NFTS_SHEET_URL = os.getenv("NFT_SHEETS_URL")
     RAW_DUMP_BUCKET = os.getenv("CSV_DUMP_BUCKET")
     DATA_DUMP_BUCKET = os.getenv("DATA_DUMP_BUCKET")
+    TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+    TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")

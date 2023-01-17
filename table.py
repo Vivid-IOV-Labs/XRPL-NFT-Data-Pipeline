@@ -3,11 +3,12 @@ import numpy as np
 import datetime
 from io import StringIO, BytesIO
 
-from utils import to_snake_case, twitter_pics
+from utils import to_snake_case, twitter_pics, get_date_string, get_date_string_backdated, get_last_n_tweets
 from config import Config
 from writers import AsyncS3FileWriter
 
-import snscrape.modules.twitter as twitter_scrapper
+# import snscrape.modules.twitter as twitter_scrapper
+# import tweepy
 
 async def table():
     current_time = datetime.datetime.utcnow()
@@ -57,21 +58,24 @@ async def table():
     tweets_list = []
     tweets_list_previous = []
     twitter_list = df.twitter.unique()
+    api_key = Config.TWITTER_API_KEY
+    api_secret = Config.TWITTER_API_SECRET
     # print(twitter_list)
     for name in twitter_list:
         # print(name)
         if type(name) == float:
             continue
-        for tweet in twitter_scrapper.TwitterSearchScraper(f"from:{name}").get_items():
-            diff = (current_time - tweet.date.replace(tzinfo=None)).total_seconds()
+        tweets = get_last_n_tweets(name, api_key, api_secret)
+        for tweet in tweets:
+            diff = (current_time - tweet.created_at.replace(tzinfo=None)).total_seconds()
             if diff < 0:
                 continue
             if diff >= 3600 * 24 * 8:
                 break
             if diff < 3600 * 24 * 7:
-                tweets_list.append([name, 1, tweet.retweetCount, tweet.likeCount])
+                tweets_list.append([name, 1, tweet.retweet_count, tweet.favorite_count])
             if diff >= 3600 * 24 * 1 and diff < 3600 * 24 * 8:  # noqa
-                tweets_list_previous.append([name, 1, tweet.retweetCount, tweet.likeCount])
+                tweets_list_previous.append([name, 1, tweet.retweet_count, tweet.favorite_count])
 
     tweets = pd.DataFrame(tweets_list, columns=["twitter", "tweets", "retweets", "likes"])
     sum = tweets.groupby("twitter").sum().reset_index(level=0)  # noqa

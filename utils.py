@@ -4,9 +4,18 @@ import boto3
 import aioboto3
 import snscrape.modules.twitter as twitter_scrapper
 import pandas as pd
+import tweepy
 import numpy as np
 from config import Config
 from io import StringIO
+
+
+def get_date_string_backdated(backdate=7):
+    return (datetime.datetime.now() - datetime.timedelta(days=backdate)).strftime("%Y-%m-%d")
+
+
+def get_date_string():
+    return datetime.datetime.now().strftime("%Y-%m-%d")
 
 
 def chunks(lst, n):
@@ -161,3 +170,11 @@ def get_monthly_df(df: pd.DataFrame, max_points: int):
         current_time -= 3600
         points_traversed += 1
     return pd.DataFrame(points[::-1])
+
+
+def get_last_n_tweets(user_name, api_key, secret_key, n=100):
+    auth = tweepy.OAuth2AppHandler(api_key, secret_key)
+    api = tweepy.API(auth)
+
+    tweets = api.user_timeline(screen_name=user_name, count=n)
+    return tweets
