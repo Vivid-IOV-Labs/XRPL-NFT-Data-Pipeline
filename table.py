@@ -17,20 +17,20 @@ async def table():
     previous = (datetime.datetime.strptime(current, '%Y-%m-%d-%H') - datetime.timedelta(days=1)).strftime('%Y-%m-%d-%H')
     df_previous = pd.read_csv(f"s3://{Config.RAW_DUMP_BUCKET}/{previous}.csv")
     df_previous.columns = [to_snake_case(col) for col in df_previous.columns]
-    df = pd.read_csv(f"s3://{Config.RAW_DUMP_BUCKET}/{current}.csv")
-    df.columns = [to_snake_case(x) for x in df.columns]
-    df = df[df["twitter"].notna()]
-    df["name"] = df["name"].str.strip()
+    df_current = pd.read_csv(f"s3://{Config.RAW_DUMP_BUCKET}/{current}.csv")
+    df_current.columns = [to_snake_case(x) for x in df_current.columns]
+    # df_current = df_current[df_current["twitter"].notna()]
+    df_current["name"] = df_current["name"].str.strip()
 
-    df["total_supply"] = df["supply"]
-    df["circulating_supply"] = df["circulation"]
+    df_current["total_supply"] = df_current["supply"]
+    df_current["circulating_supply"] = df_current["circulation"]
 
-    df = pd.merge(df, df_previous, on="issuer", how="outer", suffixes=("", "_previous"))
+    df = pd.merge(df_current, df_previous, on="issuer", how="outer", suffixes=("", "_previous"))
 
     df["promoted"] = "false"
 
     df["id"] = df.index + 1
-
+    df = df[df["name"].notna()]
     df["logo_url"], df["banner_url"] = zip(*df["twitter"].apply(twitter_pics))
 
     df["project"] = df[["issuer", "logo_url", "banner_url", "name", "promoted"]].apply(
