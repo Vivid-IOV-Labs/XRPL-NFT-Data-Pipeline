@@ -195,6 +195,18 @@ def invoke_graph_dump():
     )
     logger.info(resp)
 
+
+def invoke_twitter_dump():
+    logger.info("Invoking Twitter Dump")
+    lambda_client = boto3.client("lambda", region_name="eu-west-2", aws_access_key_id=Config.ACCESS_KEY_ID,
+                                 aws_secret_access_key=Config.SECRET_ACCESS_KEY)
+    resp = lambda_client.invoke(
+        FunctionName='nft-twitter-dump-dev',
+        InvocationType='Event',
+    )
+    logger.info(resp)
+
+
 async def xls20_raw_data_dump():
     issuers = factory.supported_issuers
     last_hour = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
@@ -224,6 +236,7 @@ async def xls20_raw_data_dump():
     ).write_df(price_df, f"{last_hour}_price.csv", "csv")
     invoke_table_dump()
     invoke_graph_dump()
+    invoke_twitter_dump()
     # await AsyncS3FileWriter(
     #     Config.RAW_DUMP_BUCKET
     # ).write_df(final_df, f"{last_hour_2}.csv", "csv")

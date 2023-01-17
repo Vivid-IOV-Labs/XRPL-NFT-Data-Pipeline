@@ -1,6 +1,7 @@
 from main import dump_issuers_nfts, dump_issuers_taxons, dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, xls20_raw_data_dump, invoke_csv_dump, chunks
 from table import table
 from graph import graph
+from twitter import twitter
 import logging
 import asyncio
 # from concurrent.futures import ThreadPoolExecutor
@@ -35,6 +36,10 @@ def table_dump(event, context):
 
 def graph_dump(event, context):
     graph()
+
+
+def twitter_dump(event, context):
+    twitter()
 
 
 def issuer_pricing_invoker(event, context):
