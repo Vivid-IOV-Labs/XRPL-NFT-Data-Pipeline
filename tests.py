@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from main import dump_issuer_taxon_offers, invoke_issuer_pricing_dump, factory, dump_issuers_taxons, dump_issuers_nfts, xls20_raw_data_dump, invoke_csv_dump, invoke_table_dump
 from graph import graph
 from table import table
+from twitter import twitter
 
 
 logger = logging.getLogger("app_log")
@@ -33,7 +34,7 @@ def thread_test():
 if __name__ == "__main__":
     if sys.argv[1] == "async":
         asyncio.run(aiotest())
-    if sys.argv[1] == "sync":
+    elif sys.argv[1] == "sync":
         graph()
     elif sys.argv[1] == "thread":
         thread_test()
@@ -41,6 +42,7 @@ if __name__ == "__main__":
         invoke_table_dump()
         invoke_csv_dump()
     else:
+        twitter()
         # import tweepy
         #
         # auth = tweepy.OAuth2AppHandler("W7ELEojTfblc304cq99tJbDGl", "2NWrwduhunhfbSqF2c7Es5e9bBW5fwN0zjGOXbYPdqjaDqsKc4")
