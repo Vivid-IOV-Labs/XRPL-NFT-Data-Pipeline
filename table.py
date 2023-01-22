@@ -126,4 +126,4 @@ async def table():
     new_b.write(bytes(content, 'utf-8'))
     await AsyncS3FileWriter(
         Config.DATA_DUMP_BUCKET
-    ).write_buffer("latest/NFT_Collections_Table.json", new_b)
+    ).write_buffer("xls20/latest/NFT_Collections_Table.json", new_b)

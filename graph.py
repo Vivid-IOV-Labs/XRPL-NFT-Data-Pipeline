@@ -53,7 +53,7 @@ def graph():
             with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
                 file.write(pct)
         else:
-            write_df(df_new, f"latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            write_df(df_new, f"xsl20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             if col == "Market_Cap":
                 day_df = get_day_df(df, 24)  # noqa
                 week_df = get_weekly_df(df, 168)
@@ -61,15 +61,15 @@ def graph():
                 day_df["x"] = day_df["x"] * 1000
                 week_df["x"] = week_df["x"] * 1000
                 month_df["x"] = month_df["x"] * 1000
-                write_df(df, f"history/{int(latest_unix)}/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
-                write_df(day_df, f"latest/{col}_Graph_Day.json", "json", bucket=Config.DATA_DUMP_BUCKET)
-                write_df(week_df, f"latest/{col}_Graph_Week.json", "json", bucket=Config.DATA_DUMP_BUCKET)
-                write_df(month_df, f"latest/{col}_Graph_Month.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+                write_df(df, f"xls20/history/{int(latest_unix)}/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+                write_df(day_df, f"xls20/latest/{col}_Graph_Day.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+                write_df(week_df, f"xls20/latest/{col}_Graph_Week.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+                write_df(month_df, f"xls20/latest/{col}_Graph_Month.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             buffer = StringIO()
             buffer.write(pct)
             s3 = get_s3_resource()
-            s3.Object(Config.DATA_DUMP_BUCKET, f"history/{int(latest_unix)}/{col}_Percentage_Change.json").put(
+            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/history/{int(latest_unix)}/{col}_Percentage_Change.json").put(
                 Body=buffer.getvalue()
             )
-            s3.Object(Config.DATA_DUMP_BUCKET, f"latest/{col}_Percentage_Change.json").put(Body=buffer.getvalue())
+            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/latest/{col}_Percentage_Change.json").put(Body=buffer.getvalue())
     return {"statusCode": 200}

@@ -63,15 +63,15 @@ def twitter():
         df = pd.DataFrame(dic[col], columns=["x", "y"])
         pct = get_pct(df, latest_unix)
         if Config.ENVIRONMENT == "PROD":
-            write_df(df, f"latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
-            write_df(df, f"history/{latest_unix}/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            write_df(df, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            write_df(df, f"xls20/history/{latest_unix}/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             buffer = StringIO()
             buffer.write(pct)
             s3 = get_s3_resource()
-            s3.Object(Config.DATA_DUMP_BUCKET, f"history/{latest_unix}/{col}_Percentage_Change.json").put(
+            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/history/{latest_unix}/{col}_Percentage_Change.json").put(
                 Body=buffer.getvalue()
             )
-            s3.Object(Config.DATA_DUMP_BUCKET, f"latest/{col}_Percentage_Change.json").put(Body=buffer.getvalue())
+            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/latest/{col}_Percentage_Change.json").put(Body=buffer.getvalue())
         else:
             write_df(df, f"data/json_dumps/{col}_Graph.json", "json")
             with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
