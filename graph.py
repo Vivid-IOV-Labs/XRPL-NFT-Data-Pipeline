@@ -15,7 +15,7 @@ def graph():
     current = files[-1]
     latest_date = file_to_time(current)
     latest_unix = latest_date.timestamp()
-    num_col = ["Holder_Count", "Market_Cap"]
+    num_col = ["Holder_Count", "Market_Cap", "Supply"]
     dic = {}
     for col in num_col:
         dic[col] = []
@@ -53,7 +53,7 @@ def graph():
             with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
                 file.write(pct)
         else:
-            write_df(df_new, f"xsl20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            write_df(df_new, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             if col == "Market_Cap":
                 day_df = get_day_df(df, 24)  # noqa
                 week_df = get_weekly_df(df, 168)
