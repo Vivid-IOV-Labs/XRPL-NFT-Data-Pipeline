@@ -3,14 +3,21 @@ import numpy as np
 import datetime
 from io import StringIO, BytesIO
 
-from utils import to_snake_case, twitter_pics, get_date_string, get_date_string_backdated, get_last_n_tweets
+from utils import to_snake_case, twitter_pics, get_last_n_tweets
 from config import Config
 from writers import AsyncS3FileWriter
+from main import factory
+from utils import write_df
 
 # import snscrape.modules.twitter as twitter_scrapper
 # import tweepy
 
 async def table():
+
+    # Dump Collections Profile
+    issuers_df = factory.issuers_df
+    write_df(issuers_df, f"xls20/latest/NFT_Collections_Profile.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+
     current_time = datetime.datetime.utcnow()
     # day_ago = current_time - datetime.timedelta(days=1)
     current = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
