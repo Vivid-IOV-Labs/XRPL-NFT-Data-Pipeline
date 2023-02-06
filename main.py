@@ -9,6 +9,7 @@ from config import Config
 from xrpl.asyncio.clients import AsyncJsonRpcClient
 from xrpl.models.requests import NFTBuyOffers, NFTSellOffers
 from xrpl.models.response import ResponseStatus
+from xrpl.constants import XRPLException
 from writers import LocalFileWriter, AsyncS3FileWriter
 from factory import Factory
 from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens, read_json, to_snake_case, twitter_pics
@@ -81,7 +82,7 @@ async def get_taxon_token_offers(issuer, taxon, token_id):
             offers = await get_token_offer(token_id, server)
             average = sum(offers)/len(offers) if offers else 0
             return average
-        except httpx.RequestError as e:
+        except (httpx.RequestError, XRPLException) as e:
             logger.error(f"Failed Using {server} with Error {e}: Retrying ...")
             continue
     logger.error(f"Could not get offers from any server for issuer {issuer}, taxon {taxon}, and token {token_id}")
