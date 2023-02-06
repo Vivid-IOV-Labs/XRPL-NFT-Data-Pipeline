@@ -3,7 +3,7 @@ import time
 import asyncio
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from main import dump_issuer_taxon_offers, invoke_issuer_pricing_dump, factory, dump_issuers_taxons, dump_issuers_nfts, xls20_raw_data_dump, invoke_csv_dump, invoke_table_dump
+from main import dump_issuer_taxon_offers, factory, invoke_issuer_pricing_dump, factory, dump_issuers_taxons, dump_issuers_nfts, xls20_raw_data_dump, invoke_csv_dump, invoke_table_dump
 from graph import graph
 from table import table
 from twitter import twitter
@@ -15,11 +15,14 @@ logger.addHandler(file_handler)
 
 async def aiotest():
     start = time.monotonic()
+    issuers = factory.supported_issuers
+    for issuer in issuers:
+        await dump_issuer_taxon_offers(issuer)
     # await dump_issuers_nfts()
     # await dump_issuers_taxons()
     # await dump_issuer_taxon_offers("r9ZW5tjbhKFLWxs4j1KqF61YSHAyDvo52D")
     # await xls20_raw_data_dump()
-    await table()
+    # await table()
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 

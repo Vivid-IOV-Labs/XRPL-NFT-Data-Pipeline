@@ -134,8 +134,15 @@ async def dump_issuers_taxons():
 
 
 async def dump_issuer_taxon_offers(issuer):
+    issuers_df = factory.issuers_df
+    taxon = issuers_df[issuers_df["Issuer_Account"]==issuer].Taxon.to_list()
+
     now = datetime.datetime.utcnow()
-    taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
+    taxons = []
+    if str(taxon[0]) != "nan":
+        taxons = [int(taxon[0])]
+    else:
+        taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
     # taxons = taxons[:10]  # temporary
