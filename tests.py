@@ -15,14 +15,14 @@ logger.addHandler(file_handler)
 
 async def aiotest():
     start = time.monotonic()
-    issuers = factory.supported_issuers
-    for issuer in issuers:
-        await dump_issuer_taxon_offers(issuer)
+    # issuers = factory.supported_issuers
+    # for issuer in issuers:
+    #     await dump_issuer_taxon_offers(issuer)
     # await dump_issuers_nfts()
     # await dump_issuers_taxons()
     # await dump_issuer_taxon_offers("r9ZW5tjbhKFLWxs4j1KqF61YSHAyDvo52D")
     # await xls20_raw_data_dump()
-    # await table()
+    await table()
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 
