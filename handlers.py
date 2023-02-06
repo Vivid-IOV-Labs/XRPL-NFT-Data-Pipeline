@@ -72,6 +72,3 @@ def issuer_pricing_invoker(event, context):
     # # with ThreadPoolExecutor(max_workers=len(issuers)) as executor:
     # #     executor.map(invoke_issuer_pricing_dump, issuers)
     invoke_csv_dump()
-
-
-issuer_pricing_invoker("xx", "xxx")
