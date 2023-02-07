@@ -11,7 +11,7 @@ def graph():
     # # day_ago = current_time - datetime.timedelta(days=1)
     # current = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
 
-    files = sorted([f"{(datetime.datetime.utcnow()-datetime.timedelta(i)).strftime('%Y-%m-%d-%H')}.csv" for i in range(30)])
+    files = sorted([f"{(datetime.datetime.utcnow()-datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.csv" for i in range(720)])
     current = files[-1]
     latest_date = file_to_time(current)
     latest_unix = latest_date.timestamp()
@@ -31,6 +31,7 @@ def graph():
             for col in num_col:
                 dic[col].append([unix_time, tot[col]])
         except FileNotFoundError:
+            print(f"file mot found for {file}")
             continue
 
     for col in num_col:

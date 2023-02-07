@@ -99,8 +99,8 @@ def get_pct(df, t):
     first_unix = first_record["x"][0]
     t0 = int(df.loc[df["x"] == t]["y"])
     t1 = int(df.loc[df["x"] == t - 24 * 60 * 60]["y"])
-    # t2 = int(df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"])
-    # t3 = int(df.loc[df["x"] == first_unix]["y"])
+    t2 = int(df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"])
+    t3 = int(df.loc[df["x"] == first_unix]["y"])
 
     pct_dic = {
         "currentValue": t0,
@@ -110,16 +110,16 @@ def get_pct(df, t):
                 "percentageChange": (t0 - t1) / (t1 * 100),
                 "directionOfChange": int(np.sign(t0 - t1)),
             },
-            # "week": {
-            #     "valueDifference": t0 - t2,
-            #     "percentageChange": (t0 - t2) / (t2 * 100),
-            #     "directionOfChange": int(np.sign(t0 - t2)),
-            # },
-            # "month": {
-            #     "valueDifference": t0 - t3,
-            #     "percentageChange": (t0 - t3) / (t3 * 100),
-            #     "directionOfChange": int(np.sign(t0 - t3)),
-            # },
+            "week": {
+                "valueDifference": t0 - t2,
+                "percentageChange": (t0 - t2) / (t2 * 100),
+                "directionOfChange": int(np.sign(t0 - t2)),
+            },
+            "month": {
+                "valueDifference": t0 - t3,
+                "percentageChange": (t0 - t3) / (t3 * 100),
+                "directionOfChange": int(np.sign(t0 - t3)),
+            },
         },
     }
     return json.dumps(pct_dic)

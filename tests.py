@@ -38,7 +38,9 @@ if __name__ == "__main__":
     if sys.argv[1] == "async":
         asyncio.run(aiotest())
     elif sys.argv[1] == "sync":
+        start = time.monotonic()
         graph()
+        print(f"Executed in {time.monotonic() - start}\n\n")
     elif sys.argv[1] == "thread":
         thread_test()
     elif sys.argv[1] == "inv":
