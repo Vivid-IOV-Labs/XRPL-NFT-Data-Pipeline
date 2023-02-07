@@ -26,7 +26,7 @@ def graph():
             unix_time = int(file_to_time(file).timestamp())
             df = read_df(f"s3://{Config.RAW_DUMP_BUCKET}/{file}")
             df = pd.merge(df, price_df, on="Issuer", how="outer")
-            df["Market_Cap"] = df["Circulation"] * df["Price"]
+            df["Market_Cap"] = df["Circulation"] * df["Price"] / 1000000
             tot = df.select_dtypes(np.number).sum()
             for col in num_col:
                 dic[col].append([unix_time, tot[col]])

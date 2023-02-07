@@ -237,6 +237,7 @@ async def xls20_raw_data_dump():
     merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])
     final_merge = merged_1.merge(issuers_df, how="inner", on=["ISSUER"])
     final_df = final_merge[["ISSUER", "NAME", "WEBSITE", "TWITTER", "PRICEXRP", "SUPPLY", "CIRCULATION"]].copy()
+    final_df["PRICEXRP"] = final_df["PRICEXRP"]/1000000
     final_df["MARKET_CAP"] = final_df["SUPPLY"] * final_df["PRICEXRP"]
     final_df["HELD_0"] = final_df["SUPPLY"] - final_df["CIRCULATION"]
     final_df["HOLDER_COUNT"] = final_df["CIRCULATION"]
