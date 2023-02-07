@@ -51,6 +51,11 @@ async def dump_issuer_nfts(issuer):
         async with session.get(f'https://api.xrpldata.com/api/v1/xls20-nfts/issuer/{issuer}') as response:
             content = await response.content.read()
             data = json.loads(content)["data"]
+            issuers_df = factory.issuers_df
+            taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
+            if str(taxon[0]) != "nan":
+                target_nfts = [nft for nft in data["nfts"] if nft["Taxon"] == taxon[0]]
+                data["nfts"] = target_nfts
             now = datetime.datetime.utcnow()
             if Config.ENVIRONMENT == "LOCAL":
                 LocalFileWriter().write_json(

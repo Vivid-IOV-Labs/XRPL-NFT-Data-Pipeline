@@ -14,20 +14,20 @@ file_handler = logging.FileHandler("logger.log")
 logger.addHandler(file_handler)
 
 async def aiotest():
-    start = time.monotonic()
+    start = time.monotonic()  # noqa
     # issuers = factory.supported_issuers
     # for issuer in issuers:
     #     await dump_issuer_taxon_offers(issuer)
-    # await dump_issuers_nfts()
+    await dump_issuers_nfts()
     # await dump_issuers_taxons()
-    await dump_issuer_taxon_offers("rUnbe8ZBmRQ7ef9EFnPd9WhXGY72GThCSc")
+    # await dump_issuer_taxon_offers("rUnbe8ZBmRQ7ef9EFnPd9WhXGY72GThCSc")
     # await xls20_raw_data_dump()
     # await table()
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 
 def thread_test():
-    start = time.monotonic()
+    start = time.monotonic()  # noqa
     issuers = factory.supported_issuers
     with ThreadPoolExecutor(max_workers=len(issuers)) as executor:
         executor.map(invoke_issuer_pricing_dump, issuers)
