@@ -69,7 +69,7 @@ async def dump_issuer_nfts(issuer):
                 ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}.json", data)
             return {
                 "issuer": issuer, "supply": len(data["nfts"]),
-                "circulation": len([token for token in data["nfts"] if token["Owner"] != issuer])
+                "circulation": len([token for token in data["nfts"] if token["Owner"].lower() != issuer.lower()])
             }
 
 

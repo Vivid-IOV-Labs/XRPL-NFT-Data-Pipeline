@@ -54,8 +54,8 @@ def graph():
             with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
                 file.write(pct)
         else:
-            write_df(df_new, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             if col == "Market_Cap":
+                write_df(df_new, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
                 day_df = get_day_df(df, 24)  # noqa
                 week_df = get_weekly_df(df, 168)
                 month_df = get_monthly_df(df, 672)
@@ -66,6 +66,9 @@ def graph():
                 write_df(day_df, f"xls20/latest/{col}_Graph_Day.json", "json", bucket=Config.DATA_DUMP_BUCKET)
                 write_df(week_df, f"xls20/latest/{col}_Graph_Week.json", "json", bucket=Config.DATA_DUMP_BUCKET)
                 write_df(month_df, f"xls20/latest/{col}_Graph_Month.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            else:
+                week_df = get_day_df(df, 168)
+                write_df(week_df, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
             buffer = StringIO()
             buffer.write(pct)
             s3 = get_s3_resource()
