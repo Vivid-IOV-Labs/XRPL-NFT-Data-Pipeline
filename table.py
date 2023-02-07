@@ -44,6 +44,10 @@ async def table():
         lambda x: x.to_json(), axis=1
     )
 
+    df["pricexrp"] = df["pricexrp"]/1000000
+    df["pricexrp_previous"] = df["pricexrp_previous"]/1000000
+    df["market_cap"] = df["market_cap"]/1000000
+    df["market_cap_previous"] = df["market_cap_previous"]/1000000
 
     df["value"] = df["holder_count"].fillna(0.0).astype(int)
     df["direction_of_change"] = np.sign(df["holder_count"] - df["holder_count_previous"]).fillna(0.0).astype(int)

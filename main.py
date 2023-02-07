@@ -82,10 +82,13 @@ async def get_issuer_taxons(issuer):
 
 
 async def get_taxon_token_offers(issuer, taxon, token_id):
+    logger.info(f"Token ID --> {token_id}")
     for server in Config.XRPL_SERVERS:
         try:
             offers = await get_token_offer(token_id, server)
+            offers = [offer for offer in offers if offer != 0]
             average = sum(offers)/len(offers) if offers else 0
+            # logger.info(f"Offers --> {offers} --> {average}\n")
             return average
         except (httpx.RequestError, XRPLException) as e:
             logger.error(f"Failed Using {server} with Error {e}: Retrying ...")
@@ -101,8 +104,16 @@ async def taxon_offers(taxon, issuer, tokens):
     offers = []
     for chunk in chunks(tokens, 50):
         averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
-        offers.extend([average for average in averages if average != 0])
-    data = {"taxon": taxon, "issuer": issuer, "average_price": sum(offers)/len(offers) if offers else 0, "floor_price": min(offers) if offers else 0}
+        logger.info(f"Averages --> {averages}\n")
+        non_zero = [avg for avg in averages if avg != 0]
+        offers += non_zero
+        logger.info(f"Offers --> {offers}")
+    data = {
+        "taxon": taxon,
+        "issuer": issuer,
+        "average_price": sum(offers)/len(offers) if offers else 0,
+        "floor_price": min(offers) if offers else 0
+    }
     if Config.ENVIRONMENT == "LOCAL":
         LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", f"{taxon}.json")
     else:
@@ -237,7 +248,6 @@ async def xls20_raw_data_dump():
     merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])
     final_merge = merged_1.merge(issuers_df, how="inner", on=["ISSUER"])
     final_df = final_merge[["ISSUER", "NAME", "WEBSITE", "TWITTER", "PRICEXRP", "SUPPLY", "CIRCULATION"]].copy()
-    final_df["PRICEXRP"] = final_df["PRICEXRP"]/1000000
     final_df["MARKET_CAP"] = final_df["SUPPLY"] * final_df["PRICEXRP"]
     final_df["HELD_0"] = final_df["SUPPLY"] - final_df["CIRCULATION"]
     final_df["HOLDER_COUNT"] = final_df["CIRCULATION"]

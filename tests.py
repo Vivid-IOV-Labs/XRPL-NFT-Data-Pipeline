@@ -18,9 +18,9 @@ async def aiotest():
     # issuers = factory.supported_issuers
     # for issuer in issuers:
     #     await dump_issuer_taxon_offers(issuer)
-    await dump_issuers_nfts()
+    # await dump_issuers_nfts()
     # await dump_issuers_taxons()
-    # await dump_issuer_taxon_offers("rUnbe8ZBmRQ7ef9EFnPd9WhXGY72GThCSc")
+    await dump_issuer_taxon_offers("r4zG9kcxyvq5niULmHbhUUbfh9R9nnNBJ4")
     # await xls20_raw_data_dump()
     # await table()
     print(f"Executed in {time.monotonic() - start}\n\n")
