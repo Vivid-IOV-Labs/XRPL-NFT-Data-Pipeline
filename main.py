@@ -6,13 +6,11 @@ import json
 import boto3
 import httpx  # noqa
 from config import Config
-from xrpl.asyncio.clients import AsyncJsonRpcClient
-from xrpl.models.requests import NFTBuyOffers, NFTSellOffers
-from xrpl.models.response import ResponseStatus
-from xrpl.constants import XRPLException
+
+
 from writers import LocalFileWriter, AsyncS3FileWriter
 from factory import Factory
-from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens, read_json, to_snake_case, twitter_pics
+from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens, read_json
 import pandas as pd  # noqa
 import time
 import datetime
@@ -25,25 +23,6 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 factory = Factory()
-
-
-async def get_token_offer(token_id, server):
-    """Fetches buy and sell offers for a particular token from the ledger"""
-    client = AsyncJsonRpcClient(server)
-    buy_offer_request = NFTBuyOffers(nft_id=token_id)
-    sell_offer_request = NFTSellOffers(nft_id=token_id)
-    buy_offers = await client.request(buy_offer_request)
-    sell_offers = await client.request(sell_offer_request)
-
-    offers = []
-    buy_offers = buy_offers.result["offers"] if buy_offers.status == ResponseStatus.SUCCESS else []
-    sell_offers = sell_offers.result["offers"] if sell_offers.status == ResponseStatus.SUCCESS else []
-    buy_offers_amount_arr = [float(offer["amount"]) for offer in buy_offers if type(offer["amount"]) != dict]
-    sell_offers_amount_arr = [float(offer["amount"]) for offer in sell_offers if type(offer["amount"]) != dict]
-    highest_buy_offer = max(buy_offers_amount_arr) if buy_offers_amount_arr else 0
-    lowest_sell_offer = min(sell_offers_amount_arr) if sell_offers_amount_arr else 0
-    offers.extend([highest_buy_offer, lowest_sell_offer])
-    return offers
 
 
 async def dump_issuer_nfts(issuer):
@@ -81,48 +60,6 @@ async def get_issuer_taxons(issuer):
             return data["data"]
 
 
-async def get_taxon_token_offers(issuer, taxon, token_id):
-    logger.info(f"Token ID --> {token_id}")
-    for server in Config.XRPL_SERVERS:
-        try:
-            offers = await get_token_offer(token_id, server)
-            offers = [offer for offer in offers if offer != 0]
-            average = sum(offers)/len(offers) if offers else 0
-            # logger.info(f"Offers --> {offers} --> {average}\n")
-            return average
-        except (httpx.RequestError, XRPLException) as e:
-            logger.error(f"Failed Using {server} with Error {e}: Retrying ...")
-            continue
-    logger.error(f"Could not get offers from any server for issuer {issuer}, taxon {taxon}, and token {token_id}")
-    return 0
-
-
-async def taxon_offers(taxon, issuer, tokens):
-    tokens = [token for token in tokens if token["Taxon"] == taxon]
-    logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
-    now = datetime.datetime.utcnow()
-    offers = []
-    for chunk in chunks(tokens, 50):
-        averages = await asyncio.gather(*[get_taxon_token_offers(issuer, taxon, token["NFTokenID"]) for token in chunk])
-        logger.info(f"Averages --> {averages}\n")
-        non_zero = [avg for avg in averages if avg != 0]
-        offers += non_zero
-        logger.info(f"Offers --> {offers}")
-    data = {
-        "taxon": taxon,
-        "issuer": issuer,
-        "average_price": sum(offers)/len(offers) if offers else 0,
-        "floor_price": min(offers) if offers else 0
-    }
-    if Config.ENVIRONMENT == "LOCAL":
-        LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", f"{taxon}.json")
-    else:
-        await AsyncS3FileWriter(
-            Config.PRICE_DUMP_BUCKET
-        ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/{taxon}.json", data)
-    return data["floor_price"]
-
-
 async def dump_issuers_nfts():
     supported_issuers = factory.supported_issuers
     supply = []
@@ -148,33 +85,6 @@ async def dump_issuers_taxons():
         await AsyncS3FileWriter(
             Config.NFT_DUMP_BUCKET
         ).write_json("taxon.json", taxons)
-
-
-async def dump_issuer_taxon_offers(issuer):
-    issuers_df = factory.issuers_df
-    taxon = issuers_df[issuers_df["Issuer_Account"]==issuer].Taxon.to_list()
-
-    now = datetime.datetime.utcnow()
-    taxons = []
-    if str(taxon[0]) != "nan":
-        taxons = [int(taxon[0])]
-    else:
-        taxons = fetch_issuer_taxons(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
-    tokens = fetch_issuer_tokens(issuer, Config.ENVIRONMENT, Config.NFT_DUMP_BUCKET, Config.ACCESS_KEY_ID, Config.SECRET_ACCESS_KEY)
-    logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
-    # taxons = taxons[:10]  # temporary
-    average_prices = []
-    for chunk in chunks(taxons, 50):
-        prices = await asyncio.gather(*[taxon_offers(taxon, issuer, tokens) for taxon in chunk])
-        average_prices.extend(prices)
-    data = {"issuer": issuer, "average_price": sum(average_prices)/len(average_prices) if average_prices else 0, "floor_price": min(average_prices) if average_prices else 0}
-    if Config.ENVIRONMENT == "LOCAL":
-        LocalFileWriter().write_json(data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", "price.json")
-    else:
-        await AsyncS3FileWriter(
-            Config.PRICE_DUMP_BUCKET
-        ).write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
-
 
 def invoke_issuer_pricing_dump(issuer):
     logger.info(f"Starting For Issuer: {issuer}")
