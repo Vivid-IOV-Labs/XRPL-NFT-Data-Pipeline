@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import json
 
 import httpx  # noqa
 from xrpl.asyncio.clients import AsyncJsonRpcClient
@@ -8,8 +9,9 @@ from xrpl.models.requests import NFTBuyOffers, NFTSellOffers
 from xrpl.models.response import ResponseStatus
 
 from config import Config
+from invokers import invoke_token_pricing_dump
 from main import factory, logger
-from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens
+from utils import chunks, fetch_issuer_taxons, fetch_issuer_tokens, read_json
 from writers import AsyncS3FileWriter, LocalFileWriter
 
 
@@ -24,7 +26,7 @@ class Pricing:
         buy_offers = await client.request(buy_offer_request)
         sell_offers = await client.request(sell_offer_request)
 
-        offers = []
+        # offers = []
         buy_offers = (
             buy_offers.result["offers"]
             if buy_offers.status == ResponseStatus.SUCCESS
@@ -43,11 +45,11 @@ class Pricing:
         ]
         highest_buy_offer = max(buy_offers_amount_arr) if buy_offers_amount_arr else 0
         lowest_sell_offer = min(sell_offers_amount_arr) if sell_offers_amount_arr else 0
-        offers.extend([highest_buy_offer, lowest_sell_offer])
-        average = sum(offers) / len(offers) if offers else 0
+        # offers.extend([highest_buy_offer, lowest_sell_offer])
+        average = highest_buy_offer+lowest_sell_offer / 2
         data = {
             "average": average,
-            "lowest_sell": lowest_sell_offer
+            "lowest_sell": lowest_sell_offer,
         }
         await AsyncS3FileWriter(Config.PRICE_DUMP_BUCKET).write_json(
             f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data
@@ -67,19 +69,94 @@ class Pricing:
 
 
     async def _dump_taxon_offers(self, taxon, issuer, tokens):
-        tokens = [token for token in tokens if token["Taxon"] == taxon]
-        logger.info(f"Running for Taxon {taxon} With {len(tokens)} Tokens")
-        for chunk in chunks(tokens, 50):
+        tokens = [token for token in tokens if token["Taxon"] == taxon][:600]
+        for chunk in chunks(tokens, 100):
             await asyncio.gather(
                 *[
                     self._dump_taxon_token_offers(issuer, taxon, token["NFTokenID"])
                     for token in chunk
                 ]
             )
-        # logger.info(f"Averages --> {averages}\n")
-        # non_zero = [avg for avg in averages if avg != 0]
-        # offers += non_zero
-        # logger.info(f"Offers --> {offers}")
+
+    async def dump_issuer_taxons_offer(self, issuer):  # noqa
+        logger.info(f"Issuer --> {issuer}")
+        issuers_df = factory.issuers_df
+        taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
+        taxons = []
+        if str(taxon[0]) != "nan":
+            taxons = [int(taxon[0])]
+        else:
+            taxons = fetch_issuer_taxons(
+                issuer,
+                Config.ENVIRONMENT,
+                Config.NFT_DUMP_BUCKET,
+                Config.ACCESS_KEY_ID,
+                Config.SECRET_ACCESS_KEY,
+            )
+        tokens = fetch_issuer_tokens(
+            issuer,
+            Config.ENVIRONMENT,
+            Config.NFT_DUMP_BUCKET,
+            Config.ACCESS_KEY_ID,
+            Config.SECRET_ACCESS_KEY,
+        )
+        if len(taxons) > 50:
+            for chunk in chunks(taxons, 50):
+                await asyncio.gather(
+                    *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in chunk]
+                )
+        else:
+            await asyncio.gather(
+                *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in taxons]
+            )
+
+
+    async def _dump_issuer_pricing(self, issuer):  # noqa
+        """
+        Loop through all the token prices and fetch the prices
+        Floor price == lowest_sell_price over all taxons
+        mid price == sum(average)/len(average)
+        """
+        now = datetime.datetime.utcnow()
+        tokens = fetch_issuer_tokens(
+            issuer,
+            Config.ENVIRONMENT,
+            Config.NFT_DUMP_BUCKET,
+            Config.ACCESS_KEY_ID,
+            Config.SECRET_ACCESS_KEY,
+        )
+        token_prices = await asyncio.gather(*[read_json(Config.PRICE_DUMP_BUCKET, f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{nft['NFTokenID']}.json", Config) for nft in tokens])
+        sell_prices = [price["lowest_sell"] for price in token_prices if price["lowest_sell"] != 0]
+        average_prices = [price["average"] for price in token_prices if price["average"] != 0]
+
+        floor_price = min(sell_prices)
+        mid_price = sum(average_prices)/len(average_prices)
+        data = {
+            "issuer": issuer,
+            "mid_price": mid_price,
+            "floor_price": floor_price
+        }
+        json.dump(data, open("data/price.json", "w"), indent=2)
+        await AsyncS3FileWriter(Config.PRICE_DUMP_BUCKET).write_json(
+            f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
+        )
+
+
+    async def dump_issuers_taxons_offer(self):  # noqa
+        issuers = factory.supported_issuers
+        await asyncio.gather(
+            *[invoke_token_pricing_dump(issuer) for issuer in issuers]
+        )
+
+
+    async def dump_issuers_pricing(self):
+        issuers = factory.supported_issuers
+        for issuer in issuers:
+            await self._dump_issuer_pricing(issuer)
+
+
+
+
     # data = {
     #     "taxon": taxon,
     #     "issuer": issuer,
@@ -102,48 +179,4 @@ class Pricing:
 
 
 # async def dump_issuer_taxon_offers(issuer):
-#     issuers_df = factory.issuers_df
-#     taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
 #
-#     now = datetime.datetime.utcnow()
-#     taxons = []
-#     if str(taxon[0]) != "nan":
-#         taxons = [int(taxon[0])]
-#     else:
-#         taxons = fetch_issuer_taxons(
-#             issuer,
-#             Config.ENVIRONMENT,
-#             Config.NFT_DUMP_BUCKET,
-#             Config.ACCESS_KEY_ID,
-#             Config.SECRET_ACCESS_KEY,
-#         )
-#     tokens = fetch_issuer_tokens(
-#         issuer,
-#         Config.ENVIRONMENT,
-#         Config.NFT_DUMP_BUCKET,
-#         Config.ACCESS_KEY_ID,
-#         Config.SECRET_ACCESS_KEY,
-#     )
-#     logger.info(f"Taxon Count: {len(taxons)}\nToken Count: {len(tokens)}")
-#     # taxons = taxons[:10]  # temporary
-#     average_prices = []
-#     for chunk in chunks(taxons, 50):
-#         prices = await asyncio.gather(
-#             *[taxon_offers(taxon, issuer, tokens) for taxon in chunk]
-#         )
-#         average_prices.extend(prices)
-#     data = {
-#         "issuer": issuer,
-#         "average_price": sum(average_prices) / len(average_prices)
-#         if average_prices
-#         else 0,
-#         "floor_price": min(average_prices) if average_prices else 0,
-#     }
-#     if Config.ENVIRONMENT == "LOCAL":
-#         LocalFileWriter().write_json(
-#             data, f"data/pricing/{now.strftime('%Y-%m-%d-%H')}/{issuer}", "price.json"
-#         )
-#     else:
-#         await AsyncS3FileWriter(Config.PRICE_DUMP_BUCKET).write_json(
-#             f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
-#         )
