@@ -1,20 +1,21 @@
-from io import StringIO
 import datetime
+from io import StringIO
 
 import pandas as pd
-# import snscrape.modules.twitter as twitter_scrapper
 
 from config import Config
-from utils import cap1, file_to_time, get_pct, get_s3_resource, write_df, get_last_n_tweets
+from utils import (
+    cap1,
+    file_to_time,
+    get_last_n_tweets,
+    get_pct,
+    get_s3_resource,
+    write_df,
+)
 
 
 def twitter():
-    # files = sorted(
-    #     [f"{(datetime.datetime.utcnow() - datetime.timedelta(i)).strftime('%Y-%m-%d-%H')}.csv" for i in range(30)])
-
-    # nft_list = open("data/text/list_nft.txt").read().splitlines()
-
-    current = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
+    current = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
     latest_date = file_to_time(current)
     latest_unix = latest_date.timestamp()
     tweets_list = []
@@ -25,7 +26,7 @@ def twitter():
     df = df[df["Twitter"].notna()]
     df["Name"] = df["Name"].str.strip()
 
-    #name_to_twitter = dict(zip(df.Name, df.Twitter))
+    # name_to_twitter = dict(zip(df.Name, df.Twitter))
 
     twitter_list = df.Twitter.unique()
     api_key = Config.TWITTER_API_KEY
@@ -63,15 +64,28 @@ def twitter():
         df = pd.DataFrame(dic[col], columns=["x", "y"])
         pct = get_pct(df, latest_unix)
         if Config.ENVIRONMENT == "PROD":
-            write_df(df, f"xls20/latest/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
-            write_df(df, f"xls20/history/{latest_unix}/{col}_Graph.json", "json", bucket=Config.DATA_DUMP_BUCKET)
+            write_df(
+                df,
+                f"xls20/latest/{col}_Graph.json",
+                "json",
+                bucket=Config.DATA_DUMP_BUCKET,
+            )
+            write_df(
+                df,
+                f"xls20/history/{latest_unix}/{col}_Graph.json",
+                "json",
+                bucket=Config.DATA_DUMP_BUCKET,
+            )
             buffer = StringIO()
             buffer.write(pct)
             s3 = get_s3_resource()
-            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/history/{latest_unix}/{col}_Percentage_Change.json").put(
-                Body=buffer.getvalue()
-            )
-            s3.Object(Config.DATA_DUMP_BUCKET, f"xls20/latest/{col}_Percentage_Change.json").put(Body=buffer.getvalue())
+            s3.Object(
+                Config.DATA_DUMP_BUCKET,
+                f"xls20/history/{latest_unix}/{col}_Percentage_Change.json",
+            ).put(Body=buffer.getvalue())
+            s3.Object(
+                Config.DATA_DUMP_BUCKET, f"xls20/latest/{col}_Percentage_Change.json"
+            ).put(Body=buffer.getvalue())
         else:
             write_df(df, f"data/json_dumps/{col}_Graph.json", "json")
             with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:

@@ -1,16 +1,16 @@
-import os.path
-import aioboto3
-from io import BytesIO
 import json
-from config import Config
-
 import logging
+import os.path
+from io import BytesIO
+
+import aioboto3
+
+from config import Config
 
 logger = logging.getLogger("app_log")
 
 
 class LocalFileWriter:
-
     def _create_path(self, path):  # noqa
         if not os.path.exists(path):
             os.makedirs(path)
@@ -42,7 +42,7 @@ class AsyncS3FileWriter:
         await self._write(path, buffer)
 
     async def write_json(self, path, obj):
-        to_bytes = json.dumps(obj, indent=4).encode('utf-8')
+        to_bytes = json.dumps(obj, indent=4).encode("utf-8")
         buffer = BytesIO()
         buffer.write(to_bytes)
         await self._write(path, buffer)

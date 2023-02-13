@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv  # noqa
     load_dotenv(".env")
 except ModuleNotFoundError:
     pass

@@ -7,10 +7,6 @@ from config import Config
 from utils import file_to_time, read_df, get_pct, write_df, get_s3_resource, get_day_df, get_weekly_df, get_monthly_df
 
 def graph():
-    # current_time = datetime.datetime.utcnow()
-    # # day_ago = current_time - datetime.timedelta(days=1)
-    # current = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H')
-
     files = sorted([f"{(datetime.datetime.utcnow()-datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.csv" for i in range(720)])
     current = files[-1]
     latest_date = file_to_time(current)
