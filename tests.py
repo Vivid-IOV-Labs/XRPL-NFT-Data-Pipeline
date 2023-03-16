@@ -23,7 +23,7 @@ async def aiotest():
     start = time.monotonic()  # noqa
     issuers = factory.supported_issuers
     pricing = PricingV2()
-    await asyncio.gather(*[pricing.dump_issuer_taxons_offer(issuer) for issuer in issuers[:1]])
+    await asyncio.gather(*[pricing.dump_issuer_taxons_offer(issuer) for issuer in ["rLtgE7FjDfyJy5FGY87zoAuKtH6Bfb9QnE"]])
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 

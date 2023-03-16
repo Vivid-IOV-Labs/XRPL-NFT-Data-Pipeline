@@ -25,7 +25,5 @@ class DataBaseConnector:
         # token = await self.get_proxy_token()
         conn_info = self.config.PROXY_CONN_INFO.copy()
         dsn = DataBaseConnector._get_dsn(conn_info)
-        print(dsn)
-        pool = await aiopg.create_pool(**conn_info)
-        print(pool)
+        pool = await aiopg.create_pool(**conn_info, maxsize=500)
         return pool
