@@ -36,7 +36,7 @@ class AsyncS3FileWriter:
         buffer.seek(0)
         async with session.client("s3") as s3:
             await s3.upload_fileobj(buffer, self.bucket, path)
-        # logger.info(f"File Uploaded to {path}")
+        logger.info(f"File Uploaded to {path}")
 
     async def write_buffer(self, path, buffer):
         await self._write(path, buffer)

@@ -10,10 +10,11 @@ provider:
   name: aws
   region: eu-west-2
   iam:
-    role: arn:aws:iam::366877760811:role/lambda-role-peerkat-nft-data-serverless
+    role: arn:aws:iam::366877760811:role/Lambda_RDS_Proxy_ACCESS
   runtime: python3.9
   layers:
     - arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-p39-pandas:9
+#    - arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-p39-psycopg2-binary:1
   architecture: x86_64
 
 package:
@@ -36,82 +37,85 @@ package:
     - '!logger.log'
 
 functions:
-  issuers-nft-dump:
-    handler: handlers.issuers_nft_dumps
-    name: issuers-nft-dump-${sls:stage}
+  test-db-pool:
+    handler: handlers.test_db_pool
     timeout: 900
-  issuers-taxon-dump:
-    handler: handlers.issuers_taxon_dumps
-    name: issuers-taxon-dump-${sls:stage}
-    timeout: 900
-  issuer-token-price-dumps:
-    handler: handlers.tokens_price_dump
-    name: issuer-token-price-dumps-${sls:stage}
-    timeout: 900
-  tracked-issuers-token-price-dumps:
-    handler: handlers.tracked_issuers_token_price_dumps
-    name: tracked-issuers-token-price-dumps-${sls:stage}
-    timeout: 900
-  issuer-price-dump:
-    handler: handlers.issuer_price_dump
-    name: issuer-price-dump-${sls:stage}
-    memorySize: 2048
-    timeout: 900
-  tracked-issuers-price-dumps:
-    handler: handlers.tracked_issuers_price_dumps
-    name: tracked-issuers-price-dumps-${sls:stage}
-    memorySize: 2048
-    timeout: 900
-  csv-dump:
-    handler: handlers.csv_dump
-    name: csv-dump-${sls:stage}
-    timeout: 900
-  nft-table-dump:
-    handler: handlers.table_dump
-    name: nft-table-dump-${sls:stage}
-    timeout: 900
-  nft-graph-dump:
-    handler: handlers.graph_dump
-    name: nft-graph-dump-${sls:stage}
-    timeout: 900
-  nft-twitter-dump:
-    handler: handlers.twitter_dump
-    name: nft-twitter-dump-${sls:stage}
-    timeout: 900
-
-stepFunctions:
-  stateMachines:
-    IssuersNFTDataDump:
-      name: IssuersNFTDataDump${sls:stage}
-      definition:
-        StartAt: NFTDumps
-        States:
-          NFTDumps:
-            Type: Parallel
-            Next: NFTPricing
-            Branches:
-              - StartAt: IssuerNFTDumps
-                States:
-                  IssuerNFTDumps:
-                    Type: Task
-                    Resource:
-                      Fn::GetAtt: [ issuers-nft-dump, Arn ]
-                    End: true
-              - StartAt: IssuerTaxonDumps
-                States:
-                  IssuerTaxonDumps:
-                    Type: Task
-                    Resource:
-                      Fn::GetAtt: [ issuers-taxon-dump, Arn ]
-                    End: true
-          NFTPricing:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ tracked-issuers-token-price-dumps, Arn ]
-            End: True
-      events:
-        - schedule:
-            rate: cron(0/60 * ? * * *)
+#  issuers-nft-dump:
+#    handler: handlers.issuers_nft_dumps
+#    name: issuers-nft-dump-${sls:stage}
+#    timeout: 900
+#  issuers-taxon-dump:
+#    handler: handlers.issuers_taxon_dumps
+#    name: issuers-taxon-dump-${sls:stage}
+#    timeout: 900
+#  issuer-token-price-dumps:
+#    handler: handlers.tokens_price_dump
+#    name: issuer-token-price-dumps-${sls:stage}
+#    timeout: 900
+#  tracked-issuers-token-price-dumps:
+#    handler: handlers.tracked_issuers_token_price_dumps
+#    name: tracked-issuers-token-price-dumps-${sls:stage}
+#    timeout: 900
+#  issuer-price-dump:
+#    handler: handlers.issuer_price_dump
+#    name: issuer-price-dump-${sls:stage}
+#    memorySize: 2048
+#    timeout: 900
+#  tracked-issuers-price-dumps:
+#    handler: handlers.tracked_issuers_price_dumps
+#    name: tracked-issuers-price-dumps-${sls:stage}
+#    memorySize: 2048
+#    timeout: 900
+#  csv-dump:
+#    handler: handlers.csv_dump
+#    name: csv-dump-${sls:stage}
+#    timeout: 900
+#  nft-table-dump:
+#    handler: handlers.table_dump
+#    name: nft-table-dump-${sls:stage}
+#    timeout: 900
+#  nft-graph-dump:
+#    handler: handlers.graph_dump
+#    name: nft-graph-dump-${sls:stage}
+#    timeout: 900
+#  nft-twitter-dump:
+#    handler: handlers.twitter_dump
+#    name: nft-twitter-dump-${sls:stage}
+#    timeout: 900
+#
+#stepFunctions:
+#  stateMachines:
+#    IssuersNFTDataDump:
+#      name: IssuersNFTDataDump${sls:stage}
+#      definition:
+#        StartAt: NFTDumps
+#        States:
+#          NFTDumps:
+#            Type: Parallel
+#            Next: NFTPricing
+#            Branches:
+#              - StartAt: IssuerNFTDumps
+#                States:
+#                  IssuerNFTDumps:
+#                    Type: Task
+#                    Resource:
+#                      Fn::GetAtt: [ issuers-nft-dump, Arn ]
+#                    End: true
+#              - StartAt: IssuerTaxonDumps
+#                States:
+#                  IssuerTaxonDumps:
+#                    Type: Task
+#                    Resource:
+#                      Fn::GetAtt: [ issuers-taxon-dump, Arn ]
+#                    End: true
+#          NFTPricing:
+#            Type: Task
+#            Resource:
+#              Fn::GetAtt: [ tracked-issuers-token-price-dumps, Arn ]
+#            End: True
+#      events:
+#        - schedule:
+#            rate: cron(0/60 * ? * * *)
 
 plugins:
   - serverless-python-requirements

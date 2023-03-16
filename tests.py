@@ -4,7 +4,10 @@ import asyncio
 import sys
 from main import factory
 from csv_dump import xls20_csv_dump
-from pricing import Pricing
+from pricing import PricingV2
+from urllib.parse import quote_plus, quote
+import aioboto3
+import aiopg
 from graph import graph
 from table import table
 from twitter import twitter
@@ -14,23 +17,13 @@ logger = logging.getLogger("app_log")
 file_handler = logging.FileHandler("logger.log")
 logger.addHandler(file_handler)
 
+
+
 async def aiotest():
     start = time.monotonic()  # noqa
-    # issuers = factory.supported_issuers
-    # for issuer in issuers:
-    #     await dump_issuer_taxon_offers(issuer)
-    # await dump_issuers_nfts()
-    # await dump_issuers_taxons()
-    # pricing = Pricing()
-    # await pricing.dump_issuer_pricing("rLtgE7FjDfyJy5FGY87zoAuKtH6Bfb9QnE")
-    # await pricing.dump_issuers_pricing()
-    # await pricing.dump_issuer_taxons_offer("r3a82jDJdg4TyUMEPEH4Wpg62HniXA4Jcj")
-    # await pricing.dump_issuers_taxons_offer()
-    # await pricing.dump_issuers_taxons_offer()
-    # await pricing._dump_issuer_taxons_offer("r4zG9kcxyvq5niULmHbhUUbfh9R9nnNBJ4")
-    # await pricing._dump_issuer_pricing("r4zG9kcxyvq5niULmHbhUUbfh9R9nnNBJ4")
-    # await xls20_csv_dump()
-    await table()
+    issuers = factory.supported_issuers
+    pricing = PricingV2()
+    await asyncio.gather(*[pricing.dump_issuer_taxons_offer(issuer) for issuer in issuers[:1]])
     print(f"Executed in {time.monotonic() - start}\n\n")
 
 

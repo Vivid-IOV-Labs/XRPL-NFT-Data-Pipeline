@@ -11,3 +11,4 @@ __pycache__/
 /.serverless/
 psycopg2
 .DS_Store
+**/.DS_Store
