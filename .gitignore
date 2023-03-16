@@ -12,3 +12,4 @@ __pycache__/
 psycopg2
 .DS_Store
 **/.DS_Store
+*.pem
