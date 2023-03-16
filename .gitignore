@@ -9,3 +9,5 @@ scratch.py
 .idea/
 __pycache__/
 /.serverless/
+psycopg2
+.DS_Store
