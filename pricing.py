@@ -50,7 +50,7 @@ class PricingV2:
     async def _dump_taxon_offers(self, taxon, issuer, tokens):
         tokens = [token for token in tokens if token["Taxon"] == taxon]
         pool = await self.db_client.create_db_pool()
-        for chunk in chunks(tokens, 500):
+        for chunk in chunks(tokens, 100):
             await asyncio.gather(
                 *[
                     self._dump_token_offer(issuer, token["NFTokenID"], pool)

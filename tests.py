@@ -27,6 +27,6 @@ def spawn_process(issuer: str):
 if __name__ == "__main__":
     start = time.monotonic()  # noqa
     issuers = factory.supported_issuers
-    with Pool(len(issuers)) as pool:
+    with Pool(8) as pool:
         pool.map(spawn_process, issuers)
     print(f"Executed in {time.monotonic() - start}\n\n")
