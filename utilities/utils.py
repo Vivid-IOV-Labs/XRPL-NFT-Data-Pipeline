@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 import json
 from io import StringIO
 
@@ -12,17 +13,7 @@ import tweepy
 from config import Config
 
 
-def get_date_string_backdated(backdate=7):
-    return (datetime.datetime.now() - datetime.timedelta(days=backdate)).strftime(
-        "%Y-%m-%d"
-    )
-
-
-def get_date_string():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
-
-
-def chunks(lst, n):
+def chunks(lst: List, n: int):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]

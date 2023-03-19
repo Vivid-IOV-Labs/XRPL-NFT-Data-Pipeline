@@ -1,10 +1,9 @@
 from main import factory
 import datetime
-from utils import read_json
 import pandas as pd
 import asyncio
 from config import Config
-from writers import AsyncS3FileWriter
+from utilities import AsyncS3FileWriter, read_json
 
 async def xls20_csv_dump():
     issuers = factory.supported_issuers

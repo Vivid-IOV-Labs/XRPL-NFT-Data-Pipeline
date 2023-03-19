@@ -10,6 +10,8 @@ import aioboto3
 from config import Config
 
 logger = logging.getLogger("app_log")
+
+
 class BaseFileWriter(metaclass=ABCMeta):
     @abstractmethod
     async def _write(self, path: str, buffer: BytesIO) -> None:

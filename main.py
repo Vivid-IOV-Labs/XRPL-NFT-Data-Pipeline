@@ -10,4 +10,4 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
-factory = Factory()
+

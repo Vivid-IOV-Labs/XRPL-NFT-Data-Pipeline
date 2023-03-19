@@ -1,11 +1,17 @@
-from config import Config
-from writers import LocalFileWriter, AsyncS3FileWriter
+from utilities import AsyncS3FileWriter, LocalFileWriter, BaseFileWriter
 import pandas as pd
 
 
 class Factory:
 
-    def __init__(self):
+    def __init__(self, config):
+        self._config = config
+        self._bucket_mapping = {
+            "price": config.PRICE_DUMP_BUCKET,
+            "nft": config.NFT_DUMP_BUCKET,
+            "csv": config.RAW_DUMP_BUCKET,
+            "data": config.DATA_DUMP_BUCKET
+        }
         self._supported_issuers = [
             "r3a82jDJdg4TyUMEPEH4Wpg62HniXA4Jcj", "r4zG9kcxyvq5niULmHbhUUbfh9R9nnNBJ4",
             "rfkwiAyQx884xGGWUNDDhp5DjMTtwdrQVd", "rKiNWUkVsq1rb9sWForfshDSEQDSUncwEu",
@@ -25,18 +31,23 @@ class Factory:
             "rpbjkoncKiv1LkPWShzZksqYPzKXmUhTW7",
         ]
 
-    @staticmethod
-    def get_writer(bucket=""):
-        if Config.ENVIRONMENT == "LOCAL":
-            return LocalFileWriter(), False
-        else:
-            return AsyncS3FileWriter(bucket), True
+    def _get_bucket(self, section) -> str:
+        return self._bucket_mapping[section]
+
+    def get_writer(self, section=None) -> BaseFileWriter:
+        if self._config.ENVIRONMENT == "LOCAL":
+            return LocalFileWriter()
+        return AsyncS3FileWriter(self._get_bucket(section))
+
+    @property
+    def config(self):
+        return self._config
 
     @property
     def supported_issuers(self):
         if self._supported_issuers:
             return self._supported_issuers
-        nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
+        nft_sheet_df = pd.read_csv(self._config.NFTS_SHEET_URL)
         supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
         self._supported_issuers = list(set(supported_issuers) - set(self._untracked_issuers))
         return self._supported_issuers
@@ -45,6 +56,6 @@ class Factory:
     def issuers_df(self):
         if not self._issuers_df.empty:
             return self._issuers_df
-        nft_sheet_df = pd.read_csv(Config.NFTS_SHEET_URL)
+        nft_sheet_df = pd.read_csv(self._config.NFTS_SHEET_URL)
         self._issuers_df = nft_sheet_df
         return self._issuers_df

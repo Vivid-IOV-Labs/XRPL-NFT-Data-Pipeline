@@ -16,7 +16,6 @@ class Config:
     SECRET_ACCESS_KEY = os.getenv("ASC_KY")
     PRICE_DUMP_BUCKET = os.getenv("PRICE_DUMP_BUCKET")
     NFT_DUMP_BUCKET = os.getenv("NFT_DUMP_BUCKET")
-    XRPL_SERVERS = {"https://xrplcluster.com", "https://s1.ripple.com:51234", "https://s2.ripple.com:51234"}
     NFTS_SHEET_URL = os.getenv("NFT_SHEETS_URL")
     RAW_DUMP_BUCKET = os.getenv("CSV_DUMP_BUCKET")
     DATA_DUMP_BUCKET = os.getenv("DATA_DUMP_BUCKET")
