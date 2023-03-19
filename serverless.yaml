@@ -35,6 +35,7 @@ package:
     - '!env.example'
     - '!env.local'
     - '!logger.log'
+    - '!bastion-access.pem'
 
 functions:
   test-db-pool:

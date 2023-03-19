@@ -33,13 +33,3 @@ class Config:
         "host": os.getenv("PROXY_HOST"),
         **DB_BASE_CONN_INFO
     }
-    RDS_CONN_INFO = {
-        "host": os.getenv("DB_HOST"),
-        **DB_BASE_CONN_INFO
-    }
-    DB_HOST = os.getenv("DB_HOST")
-    PROXY_HOST = os.getenv("PROXY_HOST")
-    RDS_USER = os.getenv("RDS_USER")
-    RDS_PASSWORD = os.getenv("RDS_PASSWORD")
-    RDS_PORT = os.getenv("RDS_PORT")
-    DB_NAME = os.getenv("DB_NAME")

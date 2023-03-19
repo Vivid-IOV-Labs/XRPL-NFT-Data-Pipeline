@@ -1,6 +1,6 @@
 from config import Config
 from writers import LocalFileWriter, AsyncS3FileWriter
-import pandas as pd  # noqa
+import pandas as pd
 
 
 class Factory:

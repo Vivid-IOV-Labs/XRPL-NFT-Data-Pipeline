@@ -1,5 +1,4 @@
 import aioboto3
-import psycopg2
 import aiopg
 
 class DataBaseConnector:
@@ -21,9 +20,7 @@ class DataBaseConnector:
                                                      DBUsername=self.config.RDS_USER, Region="eu-west-2")
             return token
 
-    async def create_db_pool(self):  # noqa
-        # token = await self.get_proxy_token()
-        conn_info = self.config.PROXY_CONN_INFO.copy()
-        dsn = DataBaseConnector._get_dsn(conn_info)
-        pool = await aiopg.create_pool(**conn_info, maxsize=500)
+    async def create_db_pool(self, max_size=100):
+        dsn = DataBaseConnector._get_dsn(self.config.PROXY_CONN_INFO)
+        pool = await aiopg.create_pool(dsn=dsn, maxsize=max_size)
         return pool
