@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from multiprocessing.pool import Pool
 from concurrent.futures import ThreadPoolExecutor
 from .base import BaseLambdaRunner
 import logging
@@ -85,10 +86,10 @@ class NFTokenPriceDump(BaseLambdaRunner):
         asyncio.run(self._dump_issuer_taxons_offer(issuer))
 
     def run(self) -> None:
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            results = executor.map(self._run, self.supported_issuers)
-            for res in results:
-                print(res)
+        with Pool(10) as pool:
+            pool.map(self._run, self.supported_issuers)
+            # for res in results:
+            #     print(res)
 
 
 class IssuerPriceDump(BaseLambdaRunner):
@@ -126,7 +127,8 @@ class IssuerPriceDump(BaseLambdaRunner):
         asyncio.run(self._dump_issuer_pricing(issuer))
 
     def run(self) -> None:
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            results = executor.map(self._run, self.supported_issuers)
-            for res in results:
-                print(res)
+        with Pool(10) as pool:
+            pool.map(self._run, self.supported_issuers)
+            # results = executor.map(self._run, self.supported_issuers)
+            # for res in results:
+            #     print(res)
