@@ -9,6 +9,7 @@ class BaseLambdaRunner(metaclass=ABCMeta):
         self.supported_issuers = factory.supported_issuers
         self.environment = factory.config.ENVIRONMENT
         self.config = factory.config
+        self.writer = None
 
     def _set_writer(self, section):
         self.writer = self.factory.get_writer(section)
