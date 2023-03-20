@@ -2,11 +2,13 @@ import asyncio
 import datetime
 from concurrent.futures import ThreadPoolExecutor
 from .base import BaseLambdaRunner
+import logging
 
-from main import logger
 from utilities import (chunks, fetch_dumped_token_prices, fetch_issuer_taxons,
                    fetch_issuer_tokens, read_json)
 
+
+logger = logging.getLogger("app_log")
 
 class NFTokenPriceDump(BaseLambdaRunner):
     def __init__(self, factory):

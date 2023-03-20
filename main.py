@@ -1,4 +1,6 @@
 import logging
+from sls_lambda import NFTokenPriceDump, IssuerPriceDump
+from utilities import factory
 
 
 logger = logging.getLogger("app_log")
@@ -10,3 +12,9 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
+if __name__ == "__main__":
+    token_price_runner = NFTokenPriceDump(factory)
+    issuer_price_runner = IssuerPriceDump(factory)
+
+    token_price_runner.run()
+    issuer_price_runner.run()
