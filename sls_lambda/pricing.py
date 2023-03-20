@@ -14,6 +14,7 @@ logger = logging.getLogger("app_log")
 class NFTokenPriceDump(BaseLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
+        self._set_writer("price")
 
     async def _get_token_offers(self, pool, token_id):  # noqa
         async with pool.acquire() as connection:
@@ -95,6 +96,7 @@ class NFTokenPriceDump(BaseLambdaRunner):
 class IssuerPriceDump(BaseLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
+        self._set_writer("price")
 
     async def _dump_issuer_pricing(self, issuer):  # noqa
         """
