@@ -7,7 +7,7 @@ from io import BytesIO
 
 import aioboto3
 
-from config import Config
+from .config import Config
 
 logger = logging.getLogger("app_log")
 
@@ -30,6 +30,7 @@ class LocalFileWriter(BaseFileWriter):
             os.makedirs(path)
 
     async def _write(self, path, buffer):
+        path = f"data/{path}"
         directory_path = "/".join(path.split("/")[:-1])
         self._create_path(directory_path)
         content = buffer.getvalue()

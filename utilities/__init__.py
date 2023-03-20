@@ -1,5 +1,5 @@
 from .writers import LocalFileWriter, AsyncS3FileWriter, BaseFileWriter
-from .db import DataBaseConnector
+from .db import DataBaseClient
 from .utils import (
     chunks,
     fetch_dumped_token_prices,

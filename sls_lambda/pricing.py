@@ -1,19 +1,16 @@
 import asyncio
 import datetime
+from concurrent.futures import ThreadPoolExecutor
+from .base import BaseLambdaRunner
 
-from config import Config
-from invokers import invoke_issuer_price_dump, invoke_token_pricing_dump
-from main import factory, logger
-from utils import (chunks, fetch_dumped_token_prices, fetch_issuer_taxons,
+from main import logger
+from utilities import (chunks, fetch_dumped_token_prices, fetch_issuer_taxons,
                    fetch_issuer_tokens, read_json)
-from writers import AsyncS3FileWriter
-from db import DataBaseConnector
 
 
-class PricingV2:
-
-    def __init__(self):  # noqa
-        self.db_client = DataBaseConnector(Config)
+class NFTokenPriceDump(BaseLambdaRunner):
+    def __init__(self, factory):
+        super().__init__(factory)
 
     async def _get_token_offers(self, pool, token_id):  # noqa
         async with pool.acquire() as connection:
@@ -37,9 +34,7 @@ class PricingV2:
             "average": average,
             "lowest_sell": lowest_sell_offer,
         }
-        await AsyncS3FileWriter(Config.PRICE_DUMP_BUCKET).write_json(
-            f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data
-        )
+        self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
 
     async def _dump_taxon_offers(self, taxon, issuer, tokens):
         tokens = [token for token in tokens if token["Taxon"] == taxon]
@@ -52,9 +47,9 @@ class PricingV2:
                 ]
             )
 
-    async def dump_issuer_taxons_offer(self, issuer):  # noqa
+    async def _dump_issuer_taxons_offer(self, issuer):  # noqa
         logger.info(f"Issuer --> {issuer}")
-        issuers_df = factory.issuers_df
+        issuers_df = self.issuers_df
         taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
         taxons = []
         if str(taxon[0]) != "nan":
@@ -62,18 +57,18 @@ class PricingV2:
         else:
             taxons = fetch_issuer_taxons(
                 issuer,
-                Config.ENVIRONMENT,
-                Config.NFT_DUMP_BUCKET,
-                Config.ACCESS_KEY_ID,
-                Config.SECRET_ACCESS_KEY,
-            )
+                self.environment,
+                self.config.NFT_DUMP_BUCKET,
+                self.config.ACCESS_KEY_ID,
+                self.config.SECRET_ACCESS_KEY,
+            )  # todo: refactor this
         tokens = fetch_issuer_tokens(
             issuer,
-            Config.ENVIRONMENT,
-            Config.NFT_DUMP_BUCKET,
-            Config.ACCESS_KEY_ID,
-            Config.SECRET_ACCESS_KEY,
-        )
+            self.environment,
+            self.config.NFT_DUMP_BUCKET,
+            self.config.ACCESS_KEY_ID,
+            self.config.SECRET_ACCESS_KEY,
+        )  # todo: refactor this
         if len(taxons) > 50:
             for chunk in chunks(taxons, 50):
                 await asyncio.gather(
@@ -84,18 +79,32 @@ class PricingV2:
                 *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in taxons]
             )
 
-    async def dump_issuer_pricing(self, issuer):  # noqa
+    def _run(self, issuer):
+        asyncio.run(self._dump_issuer_taxons_offer(issuer))
+
+    def run(self) -> None:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(self._run, self.supported_issuers)
+            for res in results:
+                print(res)
+
+
+class IssuerPriceDump(BaseLambdaRunner):
+    def __init__(self, factory):
+        super().__init__(factory)
+
+    async def _dump_issuer_pricing(self, issuer):  # noqa
         """
         Loop through all the token prices and fetch the prices
         Floor price == lowest_sell_price over all taxons
         mid price == sum(average)/len(average)
         """
         now = datetime.datetime.utcnow()
-        keys = fetch_dumped_token_prices(issuer, Config)
+        keys = fetch_dumped_token_prices(issuer, self.config)
         token_prices = []
         for chunk in chunks(keys, 100):
             chunk_prices = await asyncio.gather(
-                *[read_json(Config.PRICE_DUMP_BUCKET, key, Config) for key in chunk]
+                *[read_json(self.config.PRICE_DUMP_BUCKET, key, self.config) for key in chunk]  # todo: look into this
             )
             token_prices.extend(chunk_prices)
             logger.info(len(token_prices))
@@ -109,15 +118,13 @@ class PricingV2:
         floor_price = min(sell_prices) if sell_prices else 0
         mid_price = sum(average_prices) / len(average_prices)
         data = {"issuer": issuer, "mid_price": mid_price, "floor_price": floor_price}
+        self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
 
-        await AsyncS3FileWriter(Config.PRICE_DUMP_BUCKET).write_json(
-            f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
-        )
+    def _run(self, issuer):
+        asyncio.run(self._dump_issuer_pricing(issuer))
 
-    async def dump_issuers_taxons_offer(self):  # noqa
-        issuers = factory.supported_issuers
-        await asyncio.gather(*[invoke_token_pricing_dump(issuer) for issuer in issuers])
-
-    async def dump_issuers_pricing(self):  # noqa
-        issuers = factory.supported_issuers
-        await asyncio.gather(*[invoke_issuer_price_dump(issuer) for issuer in issuers])
+    def run(self) -> None:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(self._run, self.supported_issuers)
+            for res in results:
+                print(res)

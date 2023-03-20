@@ -1,6 +1,5 @@
 import logging
 
-from factory import Factory
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(

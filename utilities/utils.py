@@ -10,7 +10,7 @@ import pandas as pd
 import snscrape.modules.twitter as twitter_scrapper
 import tweepy
 
-from config import Config
+from .config import Config
 
 
 def chunks(lst: List, n: int):

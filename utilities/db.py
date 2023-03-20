@@ -2,7 +2,7 @@ import aioboto3
 import aiopg
 
 
-class DataBaseConnector:
+class DataBaseClient:
     def __init__(self, config):
         self.config = config
 
@@ -27,6 +27,6 @@ class DataBaseConnector:
             return token
 
     async def create_db_pool(self, max_size=100):
-        dsn = DataBaseConnector._get_dsn(self.config.PROXY_CONN_INFO)
+        dsn = DataBaseClient._get_dsn(self.config.PROXY_CONN_INFO)
         pool = await aiopg.create_pool(dsn=dsn, maxsize=max_size)
         return pool
