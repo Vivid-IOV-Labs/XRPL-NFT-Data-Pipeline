@@ -38,7 +38,7 @@ class NFTokenPriceDump(BaseLambdaRunner):
             "average": average,
             "lowest_sell": lowest_sell_offer,
         }
-        self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
+        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
 
     async def _dump_taxon_offers(self, taxon, issuer, tokens):
         tokens = [token for token in tokens if token["Taxon"] == taxon]
@@ -123,7 +123,7 @@ class IssuerPriceDump(BaseLambdaRunner):
         floor_price = min(sell_prices) if sell_prices else 0
         mid_price = sum(average_prices) / len(average_prices)
         data = {"issuer": issuer, "mid_price": mid_price, "floor_price": floor_price}
-        self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
+        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
 
     def _run(self, issuer):
         asyncio.run(self._dump_issuer_pricing(issuer))
