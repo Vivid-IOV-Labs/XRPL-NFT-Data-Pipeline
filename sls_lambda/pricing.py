@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 from multiprocessing.pool import Pool
-from concurrent.futures import ThreadPoolExecutor
 from .base import BaseLambdaRunner
 import logging
 
@@ -11,7 +10,17 @@ from utilities import (chunks, fetch_dumped_token_prices, fetch_issuer_taxons,
 
 logger = logging.getLogger("app_log")
 
-class NFTokenPriceDump(BaseLambdaRunner):
+
+class PricingLambdaRunner(BaseLambdaRunner):
+    def _run(self, issuer):
+        raise NotImplementedError
+    def run(self) -> None:
+        supported_issuers = self.factory.supported_issuers
+        with Pool(10) as pool:
+            pool.map(self._run, supported_issuers)
+
+
+class NFTokenPriceDump(PricingLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
         self._set_writer("price")
@@ -53,7 +62,7 @@ class NFTokenPriceDump(BaseLambdaRunner):
 
     async def _dump_issuer_taxons_offer(self, issuer):  # noqa
         logger.info(f"Issuer --> {issuer}")
-        issuers_df = self.issuers_df
+        issuers_df = self.factory.issuers_df
         taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
         taxons = []
         if str(taxon[0]) != "nan":
@@ -61,17 +70,17 @@ class NFTokenPriceDump(BaseLambdaRunner):
         else:
             taxons = fetch_issuer_taxons(
                 issuer,
-                self.environment,
-                self.config.NFT_DUMP_BUCKET,
-                self.config.ACCESS_KEY_ID,
-                self.config.SECRET_ACCESS_KEY,
+                self.factory.config.ENVIRONMENT,
+                self.factory.config.NFT_DUMP_BUCKET,
+                self.factory.config.ACCESS_KEY_ID,
+                self.factory.config.SECRET_ACCESS_KEY,
             )  # todo: refactor this
         tokens = fetch_issuer_tokens(
             issuer,
-            self.environment,
-            self.config.NFT_DUMP_BUCKET,
-            self.config.ACCESS_KEY_ID,
-            self.config.SECRET_ACCESS_KEY,
+            self.factory.config.ENVIRONMENT,
+            self.factory.config.NFT_DUMP_BUCKET,
+            self.factory.config.ACCESS_KEY_ID,
+            self.factory.config.SECRET_ACCESS_KEY,
         )  # todo: refactor this
         if len(taxons) > 50:
             for chunk in chunks(taxons, 50):
@@ -86,14 +95,8 @@ class NFTokenPriceDump(BaseLambdaRunner):
     def _run(self, issuer):
         asyncio.run(self._dump_issuer_taxons_offer(issuer))
 
-    def run(self) -> None:
-        with Pool(10) as pool:
-            pool.map(self._run, self.supported_issuers)
-            # for res in results:
-            #     print(res)
 
-
-class IssuerPriceDump(BaseLambdaRunner):
+class IssuerPriceDump(PricingLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
         self._set_writer("price")
@@ -105,11 +108,11 @@ class IssuerPriceDump(BaseLambdaRunner):
         mid price == sum(average)/len(average)
         """
         now = datetime.datetime.utcnow()
-        keys = fetch_dumped_token_prices(issuer, self.config)
+        keys = fetch_dumped_token_prices(issuer, self.factory.config)
         token_prices = []
         for chunk in chunks(keys, 100):
             chunk_prices = await asyncio.gather(
-                *[read_json(self.config.PRICE_DUMP_BUCKET, key, self.config) for key in chunk]  # todo: look into this
+                *[read_json(self.factory.config.PRICE_DUMP_BUCKET, key, self.factory.config) for key in chunk]  # todo: look into this
             )
             token_prices.extend(chunk_prices)
             logger.info(len(token_prices))
@@ -127,10 +130,3 @@ class IssuerPriceDump(BaseLambdaRunner):
 
     def _run(self, issuer):
         asyncio.run(self._dump_issuer_pricing(issuer))
-
-    def run(self) -> None:
-        with Pool(10) as pool:
-            pool.map(self._run, self.supported_issuers)
-            # results = executor.map(self._run, self.supported_issuers)
-            # for res in results:
-            #     print(res)

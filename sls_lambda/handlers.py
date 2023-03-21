@@ -1,25 +1,23 @@
-from nft_dumps import dump_issuers_nfts, dump_issuers_taxons
-from invokers import invoke_issuers_pricing_dump, invoke_csv_dump, invoke_table_dump, invoke_twitter_dump, invoke_graph_dump
-from csv_dump import xls20_csv_dump
-from table import table
-from graph import graph
-from twitter import twitter
-import logging
-import asyncio
-from db import DataBaseConnector
-from config import Config
-
-
-
-
-
-def test_db_pool(event, context):
-    db_connect = DataBaseConnector(Config)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(db_connect.create_db_pool())
-
-
-
+# from sls_lambda import NFTokenDump, NFTaxonDump
+# from invokers import invoke_issuers_pricing_dump, invoke_csv_dump, invoke_table_dump, invoke_twitter_dump, invoke_graph_dump
+# from csv_dump import xls20_csv_dump
+# from table import table
+# from graph import graph
+# from twitter import twitter
+# import logging
+# import asyncio
+#
+#
+#
+#
+#
+# def test_db_pool(event, context):
+#     db_connect = DataBaseConnector(Config)
+#     loop = asyncio.get_event_loop()
+#     loop.run_until_complete(db_connect.create_db_pool())
+#
+#
+#
 # def issuers_nft_dumps(event, context):
 #     loop = asyncio.get_event_loop()
 #     loop.run_until_complete(dump_issuers_nfts())

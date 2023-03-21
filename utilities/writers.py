@@ -36,6 +36,7 @@ class LocalFileWriter(BaseFileWriter):
         content = buffer.getvalue()
         with open(path, "wb") as file:
             file.write(content)
+        logger.info(f"File writen to {path}")
 
 
 class AsyncS3FileWriter(BaseFileWriter):
@@ -52,6 +53,7 @@ class AsyncS3FileWriter(BaseFileWriter):
         buffer.seek(0)
         async with session.client("s3") as s3:
             await s3.upload_fileobj(buffer, self.bucket, path)
+        logger.info(f"File writen to {path} in bucket {self.bucket}")
 
     async def write_json(self, path, obj):
         to_bytes = json.dumps(obj, indent=4).encode("utf-8")
