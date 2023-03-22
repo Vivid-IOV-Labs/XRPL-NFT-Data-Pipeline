@@ -34,11 +34,11 @@ class NFTokenPriceDump(PricingLambdaRunner):
             connection.close()
         return result
 
-    async def _get_taxon_offers(self, pool, taxon):  # noqa
+    async def _get_taxon_offers(self, pool, taxon, issuer):  # noqa
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT amount, is_sell_offer FROM nft_buy_sell_offers WHERE taxon = '{taxon}'")  # noqa
+                    f"SELECT amount, is_sell_offer FROM nft_buy_sell_offers WHERE issuer = '{issuer}' AND taxon = '{taxon}'")  # noqa
                 result = await cursor.fetchall()
             connection.close()
         return result
@@ -60,9 +60,9 @@ class NFTokenPriceDump(PricingLambdaRunner):
 
     async def _dump_taxon_pricing(self, taxon, issuer, pool):
         now = datetime.datetime.utcnow()
-        offers = await self._get_taxon_offers(pool, taxon)
-        buy_offers = [float(offer[0]) for offer in offers if offer[1] is False]
-        sell_offers = [float(offer[0]) for offer in offers if offer[1] is True]
+        offers = await self._get_taxon_offers(pool, taxon, issuer)
+        buy_offers = [float(offer[0]) for offer in offers if offer[1] is False and offer[0] != 0]
+        sell_offers = [float(offer[0]) for offer in offers if offer[1] is True and offer[0] != 0]
         highest_buy_offer = max(buy_offers) if buy_offers else 0
         lowest_sell_offer = min(sell_offers) if sell_offers else 0
         average = highest_buy_offer + lowest_sell_offer / 2
@@ -151,7 +151,7 @@ class IssuerPriceDump(PricingLambdaRunner):
         ]  # noqa
 
         floor_price = min(sell_prices) if sell_prices else 0
-        mid_price = sum(average_prices) / len(average_prices)
+        mid_price = sum(average_prices) / len(average_prices) if average_prices else 0
         data = {"issuer": issuer, "mid_price": mid_price, "floor_price": floor_price}
         await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
 
