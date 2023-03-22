@@ -23,6 +23,15 @@ class BaseFileWriter(metaclass=ABCMeta):
         buffer.write(to_bytes)
         await self._write(path, buffer)
 
+    async def write_df(self, df, path, file_type):
+        buffer = BytesIO()
+        if file_type == "csv":
+            df.to_csv(buffer, index=False)
+        await self._write(path, buffer)
+
+    async def write_buffer(self, path, buffer):
+        await self._write(path, buffer)
+
 
 class LocalFileWriter(BaseFileWriter):
     def _create_path(self, path):  # noqa
@@ -59,10 +68,4 @@ class AsyncS3FileWriter(BaseFileWriter):
         to_bytes = json.dumps(obj, indent=4).encode("utf-8")
         buffer = BytesIO()
         buffer.write(to_bytes)
-        await self._write(path, buffer)
-
-    async def write_df(self, df, path, file_type):
-        buffer = BytesIO()
-        if file_type == "csv":
-            df.to_csv(buffer, index=False)
         await self._write(path, buffer)

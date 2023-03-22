@@ -68,6 +68,3 @@
 #
 # def twitter_dump(event, context):
 #     twitter()
-
-
-

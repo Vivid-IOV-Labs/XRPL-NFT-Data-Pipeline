@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 from utilities import Factory
 
+
 class BaseLambdaRunner(metaclass=ABCMeta):
     def __init__(self, factory: Factory):
         self.factory = factory
