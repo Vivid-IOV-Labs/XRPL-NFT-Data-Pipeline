@@ -34,10 +34,33 @@ class NFTokenPriceDump(PricingLambdaRunner):
             connection.close()
         return result
 
-    async def _dump_token_offer(self, issuer, token_id, pool):  # noqa
-        """Fetches buy and sell offers for a particular token from the ledger"""
+    async def _get_taxon_offers(self, pool, taxon):  # noqa
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    f"SELECT amount, is_sell_offer FROM nft_buy_sell_offers WHERE taxon = '{taxon}'")  # noqa
+                result = await cursor.fetchall()
+            connection.close()
+        return result
+
+    # async def _dump_token_offer(self, issuer, token_id, pool):  # noqa
+    #     """Fetches buy and sell offers for a particular token from the ledger"""
+    #     now = datetime.datetime.utcnow()
+    #     offers = await self._get_token_offers(pool, token_id)
+    #     buy_offers = [float(offer[0]) for offer in offers if offer[1] is False]
+    #     sell_offers = [float(offer[0]) for offer in offers if offer[1] is True]
+    #     highest_buy_offer = max(buy_offers) if buy_offers else 0
+    #     lowest_sell_offer = min(sell_offers) if sell_offers else 0
+    #     average = highest_buy_offer + lowest_sell_offer / 2
+    #     data = {
+    #         "average": average,
+    #         "lowest_sell": lowest_sell_offer,
+    #     }
+    #     await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
+
+    async def _dump_taxon_pricing(self, taxon, issuer, pool):
         now = datetime.datetime.utcnow()
-        offers = await self._get_token_offers(pool, token_id)
+        offers = await self._get_taxon_offers(pool, taxon)
         buy_offers = [float(offer[0]) for offer in offers if offer[1] is False]
         sell_offers = [float(offer[0]) for offer in offers if offer[1] is True]
         highest_buy_offer = max(buy_offers) if buy_offers else 0
@@ -47,18 +70,18 @@ class NFTokenPriceDump(PricingLambdaRunner):
             "average": average,
             "lowest_sell": lowest_sell_offer,
         }
-        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
+        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/taxons/{taxon}.json", data)
 
-    async def _dump_taxon_offers(self, taxon, issuer, tokens):
-        tokens = [token for token in tokens if token["Taxon"] == taxon]
-        pool = await self.db_client.create_db_pool()
-        for chunk in chunks(tokens, 500):
-             await asyncio.gather(
-                 *[
-                     self._dump_token_offer(issuer, token["NFTokenID"], pool)
-                     for token in chunk
-                 ]
-             )
+    # async def _dump_taxon_offers(self, taxon, issuer, tokens):
+    #     tokens = [token for token in tokens if token["Taxon"] == taxon]
+    #     pool = await self.db_client.create_db_pool()
+    #     for chunk in chunks(tokens, 500):
+    #          await asyncio.gather(
+    #              *[
+    #                  self._dump_token_offer(issuer, token["NFTokenID"], pool)
+    #                  for token in chunk
+    #              ]
+    #          )
 
     async def _dump_issuer_taxons_offer(self, issuer):  # noqa
         logger.info(f"Issuer --> {issuer}")
@@ -75,22 +98,26 @@ class NFTokenPriceDump(PricingLambdaRunner):
                 self.factory.config.ACCESS_KEY_ID,
                 self.factory.config.SECRET_ACCESS_KEY,
             )  # todo: refactor this
-        tokens = fetch_issuer_tokens(
-            issuer,
-            self.factory.config.ENVIRONMENT,
-            self.factory.config.NFT_DUMP_BUCKET,
-            self.factory.config.ACCESS_KEY_ID,
-            self.factory.config.SECRET_ACCESS_KEY,
-        )  # todo: refactor this
-        if len(taxons) > 50:
-            for chunk in chunks(taxons, 50):
-                await asyncio.gather(
-                    *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in chunk]
-                )
+        # tokens = fetch_issuer_tokens(
+        #     issuer,
+        #     self.factory.config.ENVIRONMENT,
+        #     self.factory.config.NFT_DUMP_BUCKET,
+        #     self.factory.config.ACCESS_KEY_ID,
+        #     self.factory.config.SECRET_ACCESS_KEY,
+        # )  # todo: refactor this
+        if len(taxons) > 100:
+            for chunk in chunks(taxons, 100):
+                pool = await self.db_client.create_db_pool()
+                await asyncio.gather(*[self._dump_taxon_pricing(taxn, issuer, pool) for taxn in chunk])
+                # await asyncio.gather(
+                #     *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in chunk]
+                # )
         else:
-            await asyncio.gather(
-                *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in taxons]
-            )
+            pool = await self.db_client.create_db_pool()
+            await asyncio.gather(*[self._dump_taxon_pricing(taxn, issuer, pool) for taxn in taxons])
+            # await asyncio.gather(
+            #     *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in taxons]
+            # )
 
     def _run(self, issuer):
         asyncio.run(self._dump_issuer_taxons_offer(issuer))
