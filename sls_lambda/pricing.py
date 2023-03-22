@@ -61,8 +61,8 @@ class NFTokenPriceDump(PricingLambdaRunner):
     async def _dump_taxon_pricing(self, taxon, issuer, pool):
         now = datetime.datetime.utcnow()
         offers = await self._get_taxon_offers(pool, taxon, issuer)
-        buy_offers = [float(offer[0]) for offer in offers if offer[1] is False and offer[0] != 0]
-        sell_offers = [float(offer[0]) for offer in offers if offer[1] is True and offer[0] != 0]
+        buy_offers = [float(offer[0]) for offer in offers if offer[1] is False and float(offer[0]) != 0]
+        sell_offers = [float(offer[0]) for offer in offers if offer[1] is True and float(offer[0]) != 0]
         highest_buy_offer = max(buy_offers) if buy_offers else 0
         lowest_sell_offer = min(sell_offers) if sell_offers else 0
         average = highest_buy_offer + lowest_sell_offer / 2
@@ -142,7 +142,6 @@ class IssuerPriceDump(PricingLambdaRunner):
                 *[read_json(self.factory.config.PRICE_DUMP_BUCKET, key, self.factory.config) for key in chunk]  # todo: look into this
             )
             prices.extend(chunk_prices)
-            logger.info(len(prices))
         sell_prices = [
             price["lowest_sell"] for price in prices if price["lowest_sell"] != 0
         ]  # noqa
