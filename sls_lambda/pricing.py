@@ -52,13 +52,19 @@ class NFTokenPriceDump(PricingLambdaRunner):
     async def _dump_taxon_offers(self, taxon, issuer, tokens):
         tokens = [token for token in tokens if token["Taxon"] == taxon]
         pool = await self.db_client.create_db_pool()
-        for chunk in chunks(tokens, 100):
-            await asyncio.gather(
-                *[
-                    self._dump_token_offer(issuer, token["NFTokenID"], pool)
-                    for token in chunk
-                ]
-            )
+        await asyncio.gather(
+            *[
+                self._dump_token_offer(issuer, token["NFTokenID"], pool)
+                for token in tokens
+            ]
+        )
+        # for chunk in chunks(tokens, 100):
+        #     await asyncio.gather(
+        #         *[
+        #             self._dump_token_offer(issuer, token["NFTokenID"], pool)
+        #             for token in chunk
+        #         ]
+        #     )
 
     async def _dump_issuer_taxons_offer(self, issuer):  # noqa
         logger.info(f"Issuer --> {issuer}")
@@ -83,7 +89,7 @@ class NFTokenPriceDump(PricingLambdaRunner):
             self.factory.config.SECRET_ACCESS_KEY,
         )  # todo: refactor this
         if len(taxons) > 50:
-            for chunk in chunks(taxons, 50):
+            for chunk in chunks(taxons, 100):
                 await asyncio.gather(
                     *[self._dump_taxon_offers(taxon, issuer, tokens) for taxon in chunk]
                 )
