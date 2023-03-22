@@ -63,6 +63,19 @@ def fetch_dumped_token_prices(issuer, config):
         for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/tokens/")
     ]
 
+def fetch_dumped_taxon_prices(issuer, config):
+    last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
+    s3 = boto3.resource(
+        "s3",
+        aws_access_key_id=config.ACCESS_KEY_ID,
+        aws_secret_access_key=config.SECRET_ACCESS_KEY,
+    )
+    my_bucket = s3.Bucket(config.PRICE_DUMP_BUCKET)
+    return [
+        obj.key
+        for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/taxons/")
+    ]
+
 
 async def read_json(bucket, key, config):
     session = aioboto3.Session(

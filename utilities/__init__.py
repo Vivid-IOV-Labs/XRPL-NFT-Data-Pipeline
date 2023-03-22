@@ -14,6 +14,7 @@ from .utils import (
     get_weekly_df,
     get_monthly_df,
     get_last_n_tweets,
+    fetch_dumped_taxon_prices
 )
 from .config import Config
 from .factory import Factory

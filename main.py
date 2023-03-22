@@ -1,6 +1,8 @@
 import asyncio
+import sys
+import time
 import logging
-from sls_lambda import NFTokenPriceDump, NFTokenDump
+from sls_lambda import NFTokenPriceDump, NFTokenDump, IssuerPriceDump, NFTaxonDump
 from utilities import factory
 
 
@@ -14,9 +16,20 @@ logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
-    token_price_runner = NFTokenPriceDump(factory)
-    tokens_dump_runner = NFTokenDump(factory)
-    # issuer_price_runner = IssuerPriceDump(factory)
-    # asyncio.run(tokens_dump_runner.run())
-    token_price_runner.run()
-    # issuer_price_runner.run()
+    section = sys.argv[1]
+    start = time.time()
+    if section == "token-dump":
+        runner = NFTokenDump(factory)
+        asyncio.run(runner.run())
+    elif section == "taxon-dump":
+        runner = NFTaxonDump(factory)
+        asyncio.run(runner.run())
+    elif section == "taxon-pricing":
+        runner = NFTokenPriceDump(factory)
+        runner.run()
+    elif section == "issuer-pricing":
+        runner = IssuerPriceDump(factory)
+        runner.run()
+    else:
+        logger.info("Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing`")
+    logger.info(f"Executed in {time.time() - start}")

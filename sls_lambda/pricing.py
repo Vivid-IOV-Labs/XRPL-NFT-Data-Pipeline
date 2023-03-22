@@ -5,7 +5,7 @@ from .base import BaseLambdaRunner
 import logging
 
 from utilities import (chunks, fetch_dumped_token_prices, fetch_issuer_taxons,
-                   fetch_issuer_tokens, read_json)
+                   fetch_issuer_tokens, read_json, fetch_dumped_taxon_prices)
 
 
 logger = logging.getLogger("app_log")
@@ -135,19 +135,19 @@ class IssuerPriceDump(PricingLambdaRunner):
         mid price == sum(average)/len(average)
         """
         now = datetime.datetime.utcnow()
-        keys = fetch_dumped_token_prices(issuer, self.factory.config)
-        token_prices = []
+        keys = fetch_dumped_taxon_prices(issuer, self.factory.config)
+        prices = []
         for chunk in chunks(keys, 100):
             chunk_prices = await asyncio.gather(
                 *[read_json(self.factory.config.PRICE_DUMP_BUCKET, key, self.factory.config) for key in chunk]  # todo: look into this
             )
-            token_prices.extend(chunk_prices)
-            logger.info(len(token_prices))
+            prices.extend(chunk_prices)
+            logger.info(len(prices))
         sell_prices = [
-            price["lowest_sell"] for price in token_prices if price["lowest_sell"] != 0
+            price["lowest_sell"] for price in prices if price["lowest_sell"] != 0
         ]  # noqa
         average_prices = [
-            price["average"] for price in token_prices if price["average"] != 0
+            price["average"] for price in prices if price["average"] != 0
         ]  # noqa
 
         floor_price = min(sell_prices) if sell_prices else 0
