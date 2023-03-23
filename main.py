@@ -34,6 +34,15 @@ if __name__ == "__main__":
     elif section == "csv-dump":
         runner = CSVDump(factory)
         asyncio.run(runner.run())
+    elif section == "table-dump":
+        runner = TableDump(factory)
+        runner.sync_run()
+    elif section == "graph-dump":
+        runner = GraphDumps(factory)
+        runner.run()
+    elif section == "twitter-dump":
+        runner = TwitterDump(factory)
+        runner.run()
     elif section == "data":
         graph_runner = GraphDumps(factory)
         twitter_runner = TwitterDump(factory)

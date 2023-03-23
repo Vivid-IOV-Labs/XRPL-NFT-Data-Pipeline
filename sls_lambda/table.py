@@ -1,4 +1,5 @@
 import datetime
+import logging
 from io import BytesIO, StringIO
 
 import numpy as np
@@ -8,6 +9,7 @@ from utilities import get_last_n_tweets, to_snake_case, twitter_pics, write_df
 
 from .base import BaseLambdaRunner
 
+logger = logging.getLogger("app_log")
 
 class TableDump(BaseLambdaRunner):
     def __init__(self, factory):
@@ -33,8 +35,6 @@ class TableDump(BaseLambdaRunner):
             datetime.datetime.strptime(current, "%Y-%m-%d-%H")
             - datetime.timedelta(days=1)
         ).strftime("%Y-%m-%d-%H")
-        df_previous = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{previous}.csv")
-        df_previous.columns = [to_snake_case(col) for col in df_previous.columns]
         df_current = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{current}.csv")
         df_current.columns = [to_snake_case(x) for x in df_current.columns]
         # df_current = df_current[df_current["twitter"].notna()]
@@ -42,7 +42,12 @@ class TableDump(BaseLambdaRunner):
 
         df_current["total_supply"] = df_current["supply"]
         df_current["circulating_supply"] = df_current["circulation"]
-
+        df_previous = df_current.copy(deep=True)
+        try:
+            df_previous = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{previous}.csv")
+            df_previous.columns = [to_snake_case(col) for col in df_previous.columns]
+        except FileNotFoundError:
+            logger.error("Previous Day CSV File Not Found")
         df = pd.merge(
             df_current,
             df_previous,
@@ -110,12 +115,15 @@ class TableDump(BaseLambdaRunner):
         twitter_list = df.twitter.unique()
         api_key = config.TWITTER_API_KEY
         api_secret = config.TWITTER_API_SECRET
-        # print(twitter_list)
         for name in twitter_list:
-            # print(name)
             if type(name) == float:
                 continue
-            tweets = get_last_n_tweets(name, api_key, api_secret)
+            tweets = []
+            try:
+                tweets = get_last_n_tweets(name, api_key, api_secret)
+            except Exception as e:
+                logger.error(e)
+                continue
             for tweet in tweets:
                 diff = (
                     current_time - tweet.created_at.replace(tzinfo=None)
