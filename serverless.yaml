@@ -42,35 +42,14 @@ package:
     - '!cron.py'
 
 functions:
-#  test-db-pool:
-#    handler: handlers.test_db_pool
-#    timeout: 900
-#  issuers-nft-dump:
-#    handler: handlers.issuers_nft_dumps
-#    name: issuers-nft-dump-${sls:stage}
-#    timeout: 900
-#  issuers-taxon-dump:
-#    handler: handlers.issuers_taxon_dumps
-#    name: issuers-taxon-dump-${sls:stage}
-#    timeout: 900
-#  issuer-token-price-dumps:
-#    handler: handlers.tokens_price_dump
-#    name: issuer-token-price-dumps-${sls:stage}
-#    timeout: 900
-#  tracked-issuers-token-price-dumps:
-#    handler: handlers.tracked_issuers_token_price_dumps
-#    name: tracked-issuers-token-price-dumps-${sls:stage}
-#    timeout: 900
-#  issuer-price-dump:
-#    handler: handlers.issuer_price_dump
-#    name: issuer-price-dump-${sls:stage}
-#    memorySize: 2048
-#    timeout: 900
-#  tracked-issuers-price-dumps:
-#    handler: handlers.tracked_issuers_price_dumps
-#    name: tracked-issuers-price-dumps-${sls:stage}
-#    memorySize: 2048
-#    timeout: 900
+  issuers-nft-dump:
+    handler: sls_lambda/handlers.issuers_nft_dumps
+    name: issuers-nft-dump-${sls:stage}
+    timeout: 900
+  issuers-taxon-dump:
+    handler: sls_lambda/handlers.issuers_taxon_dumps
+    name: issuers-taxon-dump-${sls:stage}
+    timeout: 900
   csv-dump:
     handler: sls_lambda/handlers.csv_dump
     name: csv-dump-${sls:stage}

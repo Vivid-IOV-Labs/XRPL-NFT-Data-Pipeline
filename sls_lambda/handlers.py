@@ -1,4 +1,4 @@
-from sls_lambda import CSVDump, TableDump, TwitterDump, GraphDumps
+from sls_lambda import CSVDump, TableDump, TwitterDump, GraphDumps, NFTaxonDump, NFTokenDump
 from utilities import factory
 from sls_lambda.invokers import invoke_graph_dump, invoke_twitter_dump, invoke_table_dump
 import logging
@@ -14,13 +14,19 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
+def issuers_nft_dumps(event, context):
+    runner = NFTokenDump(factory)
+    asyncio.run(runner.run())
+
+def issuers_taxon_dumps(event, context):
+    runner = NFTaxonDump(factory)
+    asyncio.run(runner.run())
 
 def csv_dump(event, context):
     runner = CSVDump(factory)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(runner.run())
     loop.run_until_complete(asyncio.gather(*[invoke_table_dump(factory.config), invoke_graph_dump(factory.config), invoke_twitter_dump(factory.config)]))
-
 
 def table_dump(event, context):
     runner = TableDump(factory)
@@ -36,43 +42,3 @@ def graph_dump(event, context):
 def twitter_dump(event, context):
     runner = TwitterDump(factory)
     runner.run()
-
-
-# def test_db_pool(event, context):
-#     db_connect = DataBaseConnector(Config)
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(db_connect.create_db_pool())
-#
-#
-#
-# def issuers_nft_dumps(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(dump_issuers_nfts())
-#
-#
-# def issuers_taxon_dumps(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(dump_issuers_taxons())
-#
-#
-# def tokens_price_dump(event, context):
-#     issuer = event["issuer"]
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(pricing.dump_issuer_taxons_offer(issuer))
-#
-#
-# def issuer_price_dump(event, context):
-#     issuer = event["issuer"]
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(pricing.dump_issuer_pricing(issuer))
-#
-#
-# def tracked_issuers_token_price_dumps(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(pricing.dump_issuers_taxons_offer())
-#     invoke_issuers_pricing_dump()
-#
-# def tracked_issuers_price_dumps(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(pricing.dump_issuers_pricing())
-#     invoke_csv_dump()
