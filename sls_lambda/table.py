@@ -197,3 +197,7 @@ class TableDump(BaseLambdaRunner):
         new_b = BytesIO()
         new_b.write(bytes(content, "utf-8"))
         await self.writer.write_buffer("xls20/latest/NFT_Collections_Table.json", new_b)
+
+    def sync_run(self):
+        import asyncio
+        asyncio.run(self.run())

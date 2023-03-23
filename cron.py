@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from sls_lambda import NFTokenPriceDump, NFTokenDump, IssuerPriceDump, NFTaxonDump
+from sls_lambda.invokers import invoke_csv_dump
 from utilities import factory
 
 
@@ -24,6 +25,8 @@ def xls20_data_pipeline():
 
     taxon_price_runner.run()
     issuer_price_runner.run()
+
+    invoke_csv_dump(factory.config)
 
     logger.info("Task Completed")
 

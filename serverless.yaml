@@ -10,11 +10,10 @@ provider:
   name: aws
   region: eu-west-2
   iam:
-    role: arn:aws:iam::366877760811:role/Lambda_RDS_Proxy_ACCESS
+    role: arn:aws:iam::366877760811:role/lambda-role-peerkat-nft-data-serverless
   runtime: python3.9
   layers:
     - arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-p39-pandas:9
-#    - arn:aws:lambda:eu-west-2:770693421928:layer:Klayers-p39-psycopg2-binary:1
   architecture: x86_64
 
 package:
@@ -36,11 +35,16 @@ package:
     - '!env.local'
     - '!logger.log'
     - '!bastion-access.pem'
+    - '!airflow_dags/'
+    - '!tests/'
+    - '!conftest.py'
+    - '!main.py'
+    - '!cron.py'
 
 functions:
-  test-db-pool:
-    handler: handlers.test_db_pool
-    timeout: 900
+#  test-db-pool:
+#    handler: handlers.test_db_pool
+#    timeout: 900
 #  issuers-nft-dump:
 #    handler: handlers.issuers_nft_dumps
 #    name: issuers-nft-dump-${sls:stage}
@@ -67,22 +71,22 @@ functions:
 #    name: tracked-issuers-price-dumps-${sls:stage}
 #    memorySize: 2048
 #    timeout: 900
-#  csv-dump:
-#    handler: handlers.csv_dump
-#    name: csv-dump-${sls:stage}
-#    timeout: 900
-#  nft-table-dump:
-#    handler: handlers.table_dump
-#    name: nft-table-dump-${sls:stage}
-#    timeout: 900
-#  nft-graph-dump:
-#    handler: handlers.graph_dump
-#    name: nft-graph-dump-${sls:stage}
-#    timeout: 900
-#  nft-twitter-dump:
-#    handler: handlers.twitter_dump
-#    name: nft-twitter-dump-${sls:stage}
-#    timeout: 900
+  csv-dump:
+    handler: sls_lambda/handlers.csv_dump
+    name: csv-dump-${sls:stage}
+    timeout: 900
+  nft-table-dump:
+    handler: sls_lambda/handlers.table_dump
+    name: nft-table-dump-${sls:stage}
+    timeout: 900
+  nft-graph-dump:
+    handler: sls_lambda/handlers.graph_dump
+    name: nft-graph-dump-${sls:stage}
+    timeout: 900
+  nft-twitter-dump:
+    handler: sls_lambda/handlers.twitter_dump
+    name: nft-twitter-dump-${sls:stage}
+    timeout: 900
 #
 #stepFunctions:
 #  stateMachines:

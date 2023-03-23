@@ -1,16 +1,43 @@
-# from sls_lambda import NFTokenDump, NFTaxonDump
-# from invokers import invoke_issuers_pricing_dump, invoke_csv_dump, invoke_table_dump, invoke_twitter_dump, invoke_graph_dump
-# from csv_dump import xls20_csv_dump
-# from table import table
-# from graph import graph
-# from twitter import twitter
-# import logging
-# import asyncio
-#
-#
-#
-#
-#
+from sls_lambda import CSVDump, TableDump, TwitterDump, GraphDumps
+from utilities import factory
+from sls_lambda.invokers import invoke_graph_dump, invoke_twitter_dump, invoke_table_dump
+import logging
+import asyncio
+
+
+logger = logging.getLogger("app_log")
+formatter = logging.Formatter(
+    "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
+)  # noqa
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
+
+
+def csv_dump(event, context):
+    runner = CSVDump(factory)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(runner.run())
+    loop.run_until_complete(asyncio.gather(*[invoke_table_dump(factory.config), invoke_graph_dump(factory.config), invoke_twitter_dump(factory.config)]))
+
+
+def table_dump(event, context):
+    runner = TableDump(factory)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(runner.run())
+
+
+def graph_dump(event, context):
+    runner = GraphDumps(factory)
+    runner.run()
+
+
+def twitter_dump(event, context):
+    runner = TwitterDump(factory)
+    runner.run()
+
+
 # def test_db_pool(event, context):
 #     db_connect = DataBaseConnector(Config)
 #     loop = asyncio.get_event_loop()
@@ -49,22 +76,3 @@
 #     loop = asyncio.get_event_loop()
 #     loop.run_until_complete(pricing.dump_issuers_pricing())
 #     invoke_csv_dump()
-#
-#
-# def csv_dump(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(xls20_csv_dump())
-#     loop.run_until_complete(asyncio.gather(*[invoke_table_dump(), invoke_graph_dump(), invoke_twitter_dump()]))
-#
-#
-# def table_dump(event, context):
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(table())
-#
-#
-# def graph_dump(event, context):
-#     graph()
-#
-#
-# def twitter_dump(event, context):
-#     twitter()
