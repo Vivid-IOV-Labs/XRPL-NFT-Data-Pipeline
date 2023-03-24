@@ -1,5 +1,6 @@
 import datetime
 from io import StringIO
+import logging
 
 import pandas as pd
 
@@ -7,6 +8,8 @@ from utilities import (cap1, file_to_time, get_last_n_tweets, get_pct,
                        get_s3_resource, write_df)
 
 from .base import BaseLambdaRunner
+
+logger = logging.getLogger("app_log")
 
 
 class TwitterDump(BaseLambdaRunner):
@@ -33,7 +36,11 @@ class TwitterDump(BaseLambdaRunner):
         api_key = config.TWITTER_API_KEY
         api_secret = config.TWITTER_API_SECRET
         for name in twitter_list:
-            tweets = get_last_n_tweets(name, api_key, api_secret)
+            try:
+                tweets = get_last_n_tweets(name, api_key, api_secret)
+            except Exception as e:
+                logger.info(f"Error --> {e}")
+                continue
             for tweet in tweets:
                 diff = (
                     latest_date - tweet.created_at.replace(tzinfo=None)
