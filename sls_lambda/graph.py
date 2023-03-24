@@ -1,5 +1,7 @@
+import asyncio
 import datetime
 from io import StringIO
+import logging
 
 import numpy as np
 import pandas as pd
@@ -9,11 +11,25 @@ from utilities import (file_to_time, get_day_df, get_monthly_df, get_pct,
 
 from .base import BaseLambdaRunner
 
+logger = logging.getLogger("app_log")
 
 class GraphDumps(BaseLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
         self._set_writer("data")
+
+    def _process_file(self, path, df_dic, price_df, num_col):
+        try:
+            unix_time = int(file_to_time(path).timestamp())
+            df = read_df(f"s3://{self.factory.config.RAW_DUMP_BUCKET}/{path}")
+            df = pd.merge(df, price_df, on="Issuer", how="outer")
+            df["Market_Cap"] = df["Circulation"] * df["Price"] / 1000000
+            tot = df.select_dtypes(np.number).sum()
+            for col in num_col:
+                df_dic[col].append([unix_time, tot[col]])
+            return df_dic
+        except FileNotFoundError:
+            logger.info(f"file not found for {path}")
 
     def run(self) -> None:
         files = sorted(
@@ -34,17 +50,7 @@ class GraphDumps(BaseLambdaRunner):
         )
         price_df.columns = ["Issuer", "Price", "Price_XRP"]
         for file in files:
-            try:
-                unix_time = int(file_to_time(file).timestamp())
-                df = read_df(f"s3://{self.factory.config.RAW_DUMP_BUCKET}/{file}")
-                df = pd.merge(df, price_df, on="Issuer", how="outer")
-                df["Market_Cap"] = df["Circulation"] * df["Price"] / 1000000
-                tot = df.select_dtypes(np.number).sum()
-                for col in num_col:
-                    dic[col].append([unix_time, tot[col]])
-            except FileNotFoundError:
-                print(f"file mot found for {file}")
-                continue
+            self._process_file(file, dic, price_df, num_col)
 
         for col in num_col:
             df = pd.DataFrame(dic[col], columns=["x", "y"])
