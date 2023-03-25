@@ -9,4 +9,8 @@ scratch.py
 .idea/
 __pycache__/
 /.serverless/
-bastion-access.pem
+psycopg2
+.DS_Store
+**/.DS_Store
+*.pem
+.pytest_cache/

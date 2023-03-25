@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 import json
 from io import StringIO
 
@@ -9,20 +10,10 @@ import pandas as pd
 import snscrape.modules.twitter as twitter_scrapper
 import tweepy
 
-from config import Config
+from .config import Config
 
 
-def get_date_string_backdated(backdate=7):
-    return (datetime.datetime.now() - datetime.timedelta(days=backdate)).strftime(
-        "%Y-%m-%d"
-    )
-
-
-def get_date_string():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
-
-
-def chunks(lst, n):
+def chunks(lst: List, n: int):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
@@ -70,6 +61,19 @@ def fetch_dumped_token_prices(issuer, config):
     return [
         obj.key
         for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/tokens/")
+    ]
+
+def fetch_dumped_taxon_prices(issuer, config):
+    last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
+    s3 = boto3.resource(
+        "s3",
+        aws_access_key_id=config.ACCESS_KEY_ID,
+        aws_secret_access_key=config.SECRET_ACCESS_KEY,
+    )
+    my_bucket = s3.Bucket(config.PRICE_DUMP_BUCKET)
+    return [
+        obj.key
+        for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/taxons/")
     ]
 
 
@@ -126,27 +130,32 @@ def read_df(filename):
 def get_pct(df, t):
     first_record = df.head(1).to_dict(orient="list")
     first_unix = first_record["x"][0]
-    t0 = int(df.loc[df["x"] == t]["y"])
-    t1 = int(df.loc[df["x"] == t - 24 * 60 * 60]["y"])
-    t2 = int(df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"])
-    t3 = int(df.loc[df["x"] == first_unix]["y"])
+    s0 = df.loc[df["x"] == t]["y"]
+    s1 = df.loc[df["x"] == t - 24 * 60 * 60]["y"]
+    s2 = df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"]
+    s3 = df.loc[df["x"] == first_unix]["y"]
+
+    t0 = float(s0) if s0.any() else 0
+    t1 = float(s1) if s1.any() else 0
+    t2 = float(s2) if s2.any() else 0
+    t3 = float(s3) if s3.any() else 0
 
     pct_dic = {
         "currentValue": t0,
         "percentageChanges": {
             "day": {
                 "valueDifference": t0 - t1,
-                "percentageChange": (t0 - t1) / (t1 * 100),
+                "percentageChange": (t0 - t1) / (t1 * 100) if t1 else 0.01,
                 "directionOfChange": int(np.sign(t0 - t1)),
             },
             "week": {
                 "valueDifference": t0 - t2,
-                "percentageChange": (t0 - t2) / (t2 * 100),
+                "percentageChange": (t0 - t2) / (t2 * 100) if t2 else 0.01,
                 "directionOfChange": int(np.sign(t0 - t2)),
             },
             "month": {
                 "valueDifference": t0 - t3,
-                "percentageChange": (t0 - t3) / (t3 * 100),
+                "percentageChange": (t0 - t3) / (t3 * 100) if t3 else 0.01,
                 "directionOfChange": int(np.sign(t0 - t3)),
             },
         },
