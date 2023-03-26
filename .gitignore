@@ -14,3 +14,6 @@ psycopg2
 **/.DS_Store
 *.pem
 .pytest_cache/
+dags/sls_lambda
+dags/utilities
+logs/**

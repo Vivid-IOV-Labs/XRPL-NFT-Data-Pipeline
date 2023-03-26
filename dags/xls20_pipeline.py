@@ -3,8 +3,6 @@ from datetime import timedelta, datetime
 from airflow.operators.python import PythonOperator  # noqa
 import asyncio
 import logging
-# from sls_lambda import NFTokenPriceDump, NFTokenDump, IssuerPriceDump, NFTaxonDump
-# from utilities import factory
 
 
 logger = logging.getLogger("app_log")
@@ -17,19 +15,18 @@ logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
 
-def token_dump():
+async def token_taxon_invoker():
+    import sys
+    import os
+
+    working_dir = os.getcwd()
+    sys.path.append(f"{working_dir}/sls_lambda")
+    from sls_lambda.invokers import invoke_token_dumps, invoke_taxon_dumps
     from utilities import factory
-    from sls_lambda import NFTokenDump
+    await asyncio.gather(*[invoke_token_dumps(factory.config), invoke_taxon_dumps(factory.config)])
 
-    token_dump_runner = NFTokenDump(factory)
-    asyncio.run(token_dump_runner.run())
-
-def taxon_dump():
-    from utilities import factory
-    from sls_lambda import NFTaxonDump
-
-    taxon_dump_runner = NFTaxonDump(factory)
-    asyncio.run(taxon_dump_runner.run())
+def token_taxon_dump():
+    asyncio.run(token_taxon_invoker())
 
 def taxon_pricing():
     from utilities import factory
@@ -45,33 +42,23 @@ def issuer_pricing():
     issuer_price_runner = IssuerPriceDump(factory)
     issuer_price_runner.run()
 
+def csv_dump():
+    from sls_lambda.invokers import invoke_csv_dump
+    from utilities import factory
 
-# def xls20_data_pipeline():
-#     token_dump_runner = NFTokenDump(factory)
-#     taxon_dump_runner = NFTaxonDump(factory)
-#     taxon_price_runner = NFTokenPriceDump(factory)
-#     issuer_price_runner = IssuerPriceDump(factory)
-#
-#     asyncio.run(token_dump_runner.run())
-#     asyncio.run(taxon_dump_runner.run())
-#
-#     taxon_price_runner.run()
-#     issuer_price_runner.run()
-#
-#     logger.info("Task Completed")
+    invoke_csv_dump(factory.config)
 
 
 default_args = {
-    "owner": "airflow",
+    "owner": "peerkat",
     "depends_on_past": False,
-    "start_date": datetime(2023, 3, 23),
+    "start_date": datetime.now(),
     "email": ["ike@peerkat.com", "emmanueloluwatobi2000@gmail.com"],
     "email_on_failure": True,
     "email_on_retry": True,
     "retries": 1,
     "retry_delay": timedelta(minutes=1)
 }
-
 
 dag = DAG(
     "XLS20_Data_Pipeline_DAG",
@@ -80,15 +67,9 @@ dag = DAG(
     description="This DAG is for XLS20 Data pipeline."
 )
 
-run_token_dump = PythonOperator(
-    task_id='token-dump',
-    python_callable=token_dump,
-    dag=dag
-)
-
-run_taxon_dump = PythonOperator(
-    task_id='taxon-dump',
-    python_callable=taxon_dump,
+run_token_taxon_dump = PythonOperator(
+    task_id='token-taxon-dump',
+    python_callable=token_taxon_dump,
     dag=dag
 )
 
@@ -104,11 +85,10 @@ run_issuer_pricing = PythonOperator(
     dag=dag
 )
 
-# run_xls20_pipeline = PythonOperator(
-#     task_id='xls20-data-pipeline',
-#     python_callable=xls20_data_pipeline,
-#     dag=dag
-# )
-# print("yes")
+run_csv_dump = PythonOperator(
+    task_id='csv-dump',
+    python_callable=csv_dump,
+    dag=dag
+)
 
-run_token_dump >> run_taxon_dump >> run_taxon_pricing >> run_issuer_pricing
+run_token_taxon_dump >> run_taxon_pricing >> run_issuer_pricing >> run_csv_dump
