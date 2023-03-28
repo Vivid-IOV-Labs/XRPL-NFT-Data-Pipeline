@@ -52,7 +52,6 @@ def csv_dump():
 default_args = {
     "owner": "peerkat",
     "depends_on_past": False,
-    "start_date": datetime.now(),
     "email": ["ike@peerkat.com", "emmanueloluwatobi2000@gmail.com"],
     "email_on_failure": True,
     "email_on_retry": True,
@@ -60,35 +59,32 @@ default_args = {
     "retry_delay": timedelta(minutes=1)
 }
 
-dag = DAG(
-    "XLS20_Data_Pipeline_DAG",
+with DAG(
+    dag_id="XLS20_Data_Pipeline_DAG",
     default_args=default_args,
-    schedule="@hourly",
-    description="This DAG is for XLS20 Data pipeline."
-)
+    schedule_interval="@hourly",
+    description="This DAG is for XLS20 Data pipeline.",
+    start_date=datetime(2023, 3, 28),
+    catchup=False
+) as dag:
+    run_token_taxon_dump = PythonOperator(
+        task_id='token-taxon-dump',
+        python_callable=token_taxon_dump,
+    )
 
-run_token_taxon_dump = PythonOperator(
-    task_id='token-taxon-dump',
-    python_callable=token_taxon_dump,
-    dag=dag
-)
+    run_taxon_pricing = PythonOperator(
+        task_id='taxon-pricing',
+        python_callable=taxon_pricing,
+    )
 
-run_taxon_pricing = PythonOperator(
-    task_id='taxon-pricing',
-    python_callable=taxon_pricing,
-    dag=dag
-)
+    run_issuer_pricing = PythonOperator(
+        task_id='issuer-pricing',
+        python_callable=issuer_pricing,
+    )
 
-run_issuer_pricing = PythonOperator(
-    task_id='issuer-pricing',
-    python_callable=issuer_pricing,
-    dag=dag
-)
+    run_csv_dump = PythonOperator(
+        task_id='csv-dump',
+        python_callable=csv_dump,
+    )
 
-run_csv_dump = PythonOperator(
-    task_id='csv-dump',
-    python_callable=csv_dump,
-    dag=dag
-)
-
-run_token_taxon_dump >> run_taxon_pricing >> run_issuer_pricing >> run_csv_dump
+    run_token_taxon_dump >> run_taxon_pricing >> run_issuer_pricing >> run_csv_dump
