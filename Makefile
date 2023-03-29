@@ -6,3 +6,6 @@ docker-start:
 
 docker-stop:
 	docker compose down -v
+
+deploy-dev:
+	sls deploy --stage dev
