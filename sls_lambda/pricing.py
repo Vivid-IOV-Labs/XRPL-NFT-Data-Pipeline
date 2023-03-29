@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import logging
-from multiprocessing.pool import Pool
+from billiard.pool import Pool
 
 from utilities import (chunks, fetch_dumped_taxon_prices,
                        fetch_dumped_token_prices, fetch_issuer_taxons,
