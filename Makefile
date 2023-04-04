@@ -9,3 +9,9 @@ docker-stop:
 
 deploy-dev:
 	sls deploy --stage dev
+
+trigger-setup:
+	mv psycopg2 psycopg2-new
+	python trigger.py
+	mv psycopg2-new psycopg2
+
