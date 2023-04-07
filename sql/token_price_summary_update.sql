@@ -7,6 +7,4 @@ SELECT nft_token_id,
 FROM nft_buy_sell_offers
 WHERE currency = ''
 GROUP BY nft_token_id
-ON DUPLICATE KEY UPDATE
-    floor_price = VALUES(floor_price),
-    max_buy_offer = VALUES(max_buy_offer);
+ON CONFLICT(nft_token_id) DO UPDATE SET floor_price = EXCLUDED.floor_price, max_buy_offer = EXCLUDED.max_buy_offer;
