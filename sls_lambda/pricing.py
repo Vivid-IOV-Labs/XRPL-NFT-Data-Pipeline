@@ -47,21 +47,6 @@ class NFTokenPriceDump(PricingLambdaRunner):
             connection.close()
         return result
 
-    # async def _dump_token_offer(self, issuer, token_id, pool):  # noqa
-    #     """Fetches buy and sell offers for a particular token from the ledger"""
-    #     now = datetime.datetime.utcnow()
-    #     offers = await self._get_token_offers(pool, token_id)
-    #     buy_offers = [float(offer[0]) for offer in offers if offer[1] is False]
-    #     sell_offers = [float(offer[0]) for offer in offers if offer[1] is True]
-    #     highest_buy_offer = max(buy_offers) if buy_offers else 0
-    #     lowest_sell_offer = min(sell_offers) if sell_offers else 0
-    #     average = highest_buy_offer + lowest_sell_offer / 2
-    #     data = {
-    #         "average": average,
-    #         "lowest_sell": lowest_sell_offer,
-    #     }
-    #     await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/tokens/{token_id}.json", data)
-
     async def _dump_taxon_pricing(self, taxon, issuer, pool):
         now = datetime.datetime.utcnow()
         offers = await self._get_taxon_offers(pool, taxon, issuer)
@@ -146,38 +131,72 @@ class IssuerPriceDump(PricingLambdaRunner):
         super().__init__(factory)
         self._set_writer("price")
 
-    async def _dump_issuer_pricing(self, issuer):  # noqa
-        """
-        Loop through all the token prices and fetch the prices
-        Floor price == lowest_sell_price over all taxons
-        mid price == sum(average)/len(average)
-        """
-        now = datetime.datetime.utcnow()
-        keys = fetch_dumped_taxon_prices(issuer, self.factory.config)
-        prices = []
-        for chunk in chunks(keys, 100):
-            chunk_prices = await asyncio.gather(
-                *[
-                    read_json(
-                        self.factory.config.PRICE_DUMP_BUCKET, key, self.factory.config
-                    )
-                    for key in chunk
-                ]  # todo: look into this
-            )
-            prices.extend(chunk_prices)
-        sell_prices = [
-            price["lowest_sell"] for price in prices if price["lowest_sell"] != 0
-        ]  # noqa
-        average_prices = [
-            price["average"] for price in prices if price["average"] != 0
-        ]  # noqa
+    async def _get_issuers_pricing(self, issuers):
+        pool = await self.db_client.create_db_pool()
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
+                await cursor.execute(f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE issuer IN ({issuers_str}) GROUP BY issuer;")
+                result = await cursor.fetchall()
+            connection.close()
+        return result
 
-        floor_price = min(sell_prices) if sell_prices else 0
-        mid_price = sum(average_prices) / len(average_prices) if average_prices else 0
-        data = {"issuer": issuer, "mid_price": mid_price, "floor_price": floor_price}
-        await self.writer.write_json(
-            f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
-        )
+    async def _dump_issuer_prices(self, pricing):
+        now = datetime.datetime.utcnow()
+        issuer = pricing[0]
+        floor_price = float(pricing[1]) if pricing[1] is not None else 0
+        max_buy_offer = float(pricing[2]) if pricing[2] is not None else 0
+        mid_price = float(pricing[3]) if pricing[3] is not None else 0
+        data = {
+            "issuer": issuer,
+            "floor_price": floor_price,
+            "max_buy_offer": max_buy_offer,
+            "mid_price": mid_price
+        }
+        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
 
     def _run(self, issuer):
-        asyncio.run(self._dump_issuer_pricing(issuer))
+        pass
+
+    async def run(self) -> None:
+        issuers = self.factory.supported_issuers
+        prices = await self._get_issuers_pricing(issuers)
+        await asyncio.gather(*[self._dump_issuer_prices(pricing) for pricing in prices])
+
+
+
+    # async def _dump_issuer_pricing(self, issuer):  # noqa
+    #     """
+    #     Loop through all the token prices and fetch the prices
+    #     Floor price == lowest_sell_price over all taxons
+    #     mid price == sum(average)/len(average)
+    #     """
+    #     now = datetime.datetime.utcnow()
+    #     keys = fetch_dumped_taxon_prices(issuer, self.factory.config)
+    #     prices = []
+    #     for chunk in chunks(keys, 100):
+    #         chunk_prices = await asyncio.gather(
+    #             *[
+    #                 read_json(
+    #                     self.factory.config.PRICE_DUMP_BUCKET, key, self.factory.config
+    #                 )
+    #                 for key in chunk
+    #             ]  # todo: look into this
+    #         )
+    #         prices.extend(chunk_prices)
+    #     sell_prices = [
+    #         price["lowest_sell"] for price in prices if price["lowest_sell"] != 0
+    #     ]  # noqa
+    #     average_prices = [
+    #         price["average"] for price in prices if price["average"] != 0
+    #     ]  # noqa
+    #
+    #     floor_price = min(sell_prices) if sell_prices else 0
+    #     mid_price = sum(average_prices) / len(average_prices) if average_prices else 0
+    #     data = {"issuer": issuer, "mid_price": mid_price, "floor_price": floor_price}
+    #     await self.writer.write_json(
+    #         f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
+    #     )
+    #
+    # def _run(self, issuer):
+    #     asyncio.run(self._dump_issuer_pricing(issuer))

@@ -30,7 +30,7 @@ if __name__ == "__main__":
         runner.run()
     elif section == "issuer-pricing":
         runner = IssuerPriceDump(factory)
-        runner.run()
+        asyncio.run(runner.run())
     elif section == "csv-dump":
         runner = CSVDump(factory)
         asyncio.run(runner.run())

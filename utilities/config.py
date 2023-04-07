@@ -32,3 +32,7 @@ class Config:
         "host": os.getenv("PROXY_HOST"),
         **DB_BASE_CONN_INFO
     }
+    DB_CONN_INFO = {
+        "host": os.getenv("DB_HOST"),
+        **DB_BASE_CONN_INFO
+    }

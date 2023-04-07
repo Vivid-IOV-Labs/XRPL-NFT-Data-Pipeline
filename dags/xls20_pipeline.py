@@ -28,19 +28,19 @@ async def token_taxon_invoker():
 def token_taxon_dump():
     asyncio.run(token_taxon_invoker())
 
-def taxon_pricing():
-    from utilities import factory
-    from sls_lambda import NFTokenPriceDump
-
-    taxon_price_runner = NFTokenPriceDump(factory)
-    taxon_price_runner.run()
+# def taxon_pricing():
+#     from utilities import factory
+#     from sls_lambda import NFTokenPriceDump
+#
+#     taxon_price_runner = NFTokenPriceDump(factory)
+#     taxon_price_runner.run()
 
 def issuer_pricing():
     from utilities import factory
     from sls_lambda import IssuerPriceDump
 
     issuer_price_runner = IssuerPriceDump(factory)
-    issuer_price_runner.run()
+    asyncio.run(issuer_price_runner.run())
 
 def csv_dump():
     from sls_lambda.invokers import invoke_csv_dump
@@ -72,10 +72,10 @@ with DAG(
         python_callable=token_taxon_dump,
     )
 
-    run_taxon_pricing = PythonOperator(
-        task_id='taxon-pricing',
-        python_callable=taxon_pricing,
-    )
+    # run_taxon_pricing = PythonOperator(
+    #     task_id='taxon-pricing',
+    #     python_callable=taxon_pricing,
+    # )
 
     run_issuer_pricing = PythonOperator(
         task_id='issuer-pricing',
@@ -87,4 +87,4 @@ with DAG(
         python_callable=csv_dump,
     )
 
-    run_token_taxon_dump >> run_taxon_pricing >> run_issuer_pricing >> run_csv_dump
+    run_token_taxon_dump >> run_issuer_pricing >> run_csv_dump

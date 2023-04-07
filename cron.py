@@ -1,7 +1,7 @@
 import asyncio
 import time
 import logging
-from sls_lambda import NFTokenPriceDump, IssuerPriceDump
+from sls_lambda import IssuerPriceDump
 from sls_lambda.invokers import invoke_csv_dump, invoke_taxon_dumps, invoke_token_dumps
 from utilities import factory
 
@@ -19,13 +19,13 @@ async def token_taxon_invoker():
     await asyncio.gather(*[invoke_token_dumps(factory.config), invoke_taxon_dumps(factory.config)])
 
 def xls20_data_pipeline():
-    taxon_price_runner = NFTokenPriceDump(factory)
+    # taxon_price_runner = NFTokenPriceDump(factory)
     issuer_price_runner = IssuerPriceDump(factory)
     start = time.time()
-    asyncio.run(token_taxon_invoker())
+    # asyncio.run(token_taxon_invoker())
 
-    taxon_price_runner.run()
-    issuer_price_runner.run()
+    # taxon_price_runner.run()
+    asyncio.run(issuer_price_runner.run())
 
     invoke_csv_dump(factory.config)
 
