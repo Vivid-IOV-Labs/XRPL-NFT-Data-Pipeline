@@ -225,3 +225,10 @@ def get_last_n_tweets(user_name, api_key, secret_key, n=100):
 
     tweets = api.user_timeline(screen_name=user_name, count=n)
     return tweets
+
+async def execute_sql_file(conn, sql_file):
+    with open(sql_file, 'r') as f:
+        sql = f.read()
+    async with conn.cursor() as cur:
+        result = await cur.execute(sql)
+        return result
