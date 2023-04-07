@@ -50,7 +50,7 @@ class CSVDump(BaseLambdaRunner):
             inplace=True,
         )
         price_df.rename(
-            columns={"issuer": "ISSUER", "floor_price": "PRICEXRP"}, inplace=True
+            columns={"issuer": "ISSUER", "mid_price": "PRICEXRP", "floor_price": "FLOORPRICE"}, inplace=True
         )
         merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])
         final_merge = merged_1.merge(issuers_df, how="inner", on=["ISSUER"])

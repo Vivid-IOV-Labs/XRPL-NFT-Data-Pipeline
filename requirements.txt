@@ -6,3 +6,4 @@ snscrape==0.6.1.20230314
 fsspec==2023.3.0
 s3fs==2023.3.0
 tweepy==4.13.0
+billiard==4.1.0

@@ -18,7 +18,8 @@ from .utils import (
     read_df,
     write_df,
     get_s3_resource,
-    cap1
+    cap1,
+    execute_sql_file
 )
 from .config import Config
 from .factory import Factory
