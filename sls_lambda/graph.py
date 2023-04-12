@@ -48,7 +48,7 @@ class GraphDumps(BaseLambdaRunner):
         price_df = pd.read_csv(
             f"s3://{self.factory.config.RAW_DUMP_BUCKET}/{current.replace('.csv', '_price.csv')}"
         )
-        price_df.columns = ["Issuer", "Price", "Price_XRP"]
+        price_df.columns = ["Issuer", "Price", "Max_Buy_Offer", "Price_XRP"]
         for file in files:
             self._process_file(file, dic, price_df, num_col)
 

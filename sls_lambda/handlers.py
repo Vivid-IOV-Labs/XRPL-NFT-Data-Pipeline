@@ -1,4 +1,4 @@
-from sls_lambda import CSVDump, TableDump, TwitterDump, GraphDumps, NFTaxonDump, NFTokenDump
+from sls_lambda import CSVDump, TableDump, TwitterDump, GraphDumps, NFTaxonDump, NFTokenDump, IssuerPriceDump
 from utilities import factory
 from sls_lambda.invokers import invoke_graph_dump, invoke_twitter_dump, invoke_table_dump
 import logging
@@ -21,6 +21,10 @@ def issuers_nft_dumps(event, context):
 def issuers_taxon_dumps(event, context):
     runner = NFTaxonDump(factory)
     asyncio.run(runner.run())
+
+def issuers_price_dump(event, context):
+    issuer_price_runner = IssuerPriceDump(factory)
+    asyncio.run(issuer_price_runner.run())
 
 def csv_dump(event, context):
     runner = CSVDump(factory)

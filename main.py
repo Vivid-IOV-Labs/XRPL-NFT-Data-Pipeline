@@ -58,5 +58,5 @@ if __name__ == "__main__":
         p2.join()
         p3.join()
     else:
-        logger.info("Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing`")
+        logger.info("Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`")
     logger.info(f"Executed in {time.time() - start}")

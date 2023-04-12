@@ -53,6 +53,10 @@ functions:
     handler: sls_lambda/handlers.issuers_taxon_dumps
     name: issuers-taxon-dump-${sls:stage}
     timeout: 900
+  issuers-pricing-dump:
+    handler: sls_lambda/handlers.issuers_price_dump
+    name: issuers-price-dump-${sls:stage}
+    timeout: 900
   csv-dump:
     handler: sls_lambda/handlers.csv_dump
     name: csv-dump-${sls:stage}
@@ -98,7 +102,7 @@ functions:
 #          NFTPricing:
 #            Type: Task
 #            Resource:
-#              Fn::GetAtt: [ tracked-issuers-token-price-dumps, Arn ]
+#              Fn::GetAtt: [ issuers-pricing-dump, Arn ]
 #            End: True
 #      events:
 #        - schedule:
