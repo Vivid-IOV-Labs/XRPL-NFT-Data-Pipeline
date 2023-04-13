@@ -16,6 +16,8 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
+
+
 if __name__ == "__main__":
     section = sys.argv[1]
     start = time.time()

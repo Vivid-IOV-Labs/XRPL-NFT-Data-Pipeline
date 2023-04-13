@@ -66,10 +66,20 @@ class TableDump(BaseLambdaRunner):
             ["issuer", "logo_url", "banner_url", "name", "promoted"]
         ].apply(lambda x: x.to_json(), axis=1)
 
-        df["pricexrp"] = df["pricexrp"] / 1000000
-        df["pricexrp_previous"] = df["pricexrp_previous"] / 1000000
-        df["market_cap"] = df["market_cap"] / 1000000
-        df["market_cap_previous"] = df["market_cap_previous"] / 1000000
+        df[[
+            "pricexrp", "pricexrp_previous",
+            "floor_price_xrp", "floor_price_xrp_previous",
+            "mid_price_xrp", "mid_price_xrp_previous",
+            "max_buy_offer_xrp", "max_buy_offer_xrp_previous",
+            "market_cap", "market_cap_previous"
+        ]] = df[[
+            "pricexrp", "pricexrp_previous",
+            "floor_price_xrp", "floor_price_xrp_previous",
+            "mid_price_xrp", "mid_price_xrp_previous",
+            "max_buy_offer_xrp", "max_buy_offer_xrp_previous",
+            "market_cap", "market_cap_previous"
+        ]] / 1000000
+
         df["value"] = df["holder_count"].fillna(0.0).astype(int)
         df["direction_of_change"] = (
             np.sign(df["holder_count"] - df["holder_count_previous"])
@@ -80,21 +90,23 @@ class TableDump(BaseLambdaRunner):
             lambda x: x.to_json(), axis=1
         )
 
-        df["value"] = df["pricexrp"]
-        df["percentage_change"] = round(
-            abs(
-                (df["pricexrp"] - df["pricexrp_previous"])
-                / df["pricexrp_previous"]
-                * 100
-            ),
-            2,
-        )
-        df["direction_of_change"] = (
-            np.sign(df["pricexrp"] - df["pricexrp_previous"]).fillna(0.0).astype(int)
-        )
-        df["price_xrp"] = df[
-            ["value", "percentage_change", "direction_of_change"]
-        ].apply(lambda x: x.to_json(), axis=1)
+        price_cols = ["pricexrp", "floor_price_xrp", "mid_price_xrp", "max_buy_offer_xrp"]
+        for col in price_cols:
+            df["value"] = df[col]
+            df["percentage_change"] = round(
+                abs(
+                    (df[col] - df[f"{col}_previous"])
+                    / df[f"{col}_previous"]
+                    * 100
+                ),
+                2,
+            )
+            df["direction_of_change"] = (
+                np.sign(df[col] - df[f"{col}_previous"]).fillna(0.0).astype(int)
+            )
+            df[col] = df[
+                ["value", "percentage_change", "direction_of_change"]
+            ].apply(lambda x: x.to_json(), axis=1)
 
         df["market_cap"] = df["market_cap"].astype(float)
         df = df.sort_values(by=["market_cap"], ascending=False)
@@ -176,6 +188,7 @@ class TableDump(BaseLambdaRunner):
         df["social_activity"] = df[
             ["value", "percentage", "direction_of_change"]
         ].apply(lambda x: x.to_json(), axis=1)
+        df["price_xrp"] = df["pricexrp"]
         output = df[
             [
                 "id",
@@ -184,6 +197,10 @@ class TableDump(BaseLambdaRunner):
                 "holder_count",
                 "social_activity",
                 "price_xrp",
+                "pricexrp",
+                "floor_price_xrp",
+                "mid_price_xrp",
+                "max_buy_offer_xrp",
                 "market_cap",
                 "tweets",
                 "re_tweets",
