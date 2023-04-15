@@ -55,7 +55,8 @@ class CSVDump(BaseLambdaRunner):
                 "mid_price": "MID_PRICE_XRP",
                 "floor_price": "FLOOR_PRICE_XRP",
                 "max_buy_offer": "MAX_BUY_OFFER_XRP",
-            }, inplace=True
+            },
+            inplace=True,
         )
         price_df["PRICEXRP"] = price_df["MID_PRICE_XRP"]
         merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])

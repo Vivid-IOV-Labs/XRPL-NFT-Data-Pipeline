@@ -1,7 +1,7 @@
 import datetime
-from typing import List
 import json
 from io import StringIO
+from typing import List
 
 import aioboto3
 import boto3
@@ -62,6 +62,7 @@ def fetch_dumped_token_prices(issuer, config):
         obj.key
         for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/tokens/")
     ]
+
 
 def fetch_dumped_taxon_prices(issuer, config):
     last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
@@ -226,8 +227,9 @@ def get_last_n_tweets(user_name, api_key, secret_key, n=100):
     tweets = api.user_timeline(screen_name=user_name, count=n)
     return tweets
 
+
 async def execute_sql_file(conn, sql_file):
-    with open(sql_file, 'r') as f:
+    with open(sql_file, "r") as f:
         sql = f.read()
     async with conn.cursor() as cur:
         result = await cur.execute(sql)

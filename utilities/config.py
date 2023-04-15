@@ -1,9 +1,9 @@
 import os
 from dataclasses import dataclass
 
-
 try:
     from dotenv import load_dotenv  # noqa
+
     load_dotenv(".env")
 except ModuleNotFoundError:
     pass
@@ -26,13 +26,7 @@ class Config:
         "port": os.getenv("RDS_PORT"),
         "database": os.getenv("DB_NAME"),
         "user": os.getenv("RDS_USER"),
-        "password": os.getenv("RDS_PASSWORD")
+        "password": os.getenv("RDS_PASSWORD"),
     }
-    PROXY_CONN_INFO = {
-        "host": os.getenv("PROXY_HOST"),
-        **DB_BASE_CONN_INFO
-    }
-    DB_CONN_INFO = {
-        "host": os.getenv("DB_HOST"),
-        **DB_BASE_CONN_INFO
-    }
+    PROXY_CONN_INFO = {"host": os.getenv("PROXY_HOST"), **DB_BASE_CONN_INFO}
+    DB_CONN_INFO = {"host": os.getenv("DB_HOST"), **DB_BASE_CONN_INFO}

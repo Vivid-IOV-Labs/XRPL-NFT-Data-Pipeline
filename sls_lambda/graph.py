@@ -1,7 +1,7 @@
 import asyncio
 import datetime
-from io import StringIO
 import logging
+from io import StringIO
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from utilities import (file_to_time, get_day_df, get_monthly_df, get_pct,
 from .base import BaseLambdaRunner
 
 logger = logging.getLogger("app_log")
+
 
 class GraphDumps(BaseLambdaRunner):
     def __init__(self, factory):
@@ -48,7 +49,13 @@ class GraphDumps(BaseLambdaRunner):
         price_df = pd.read_csv(
             f"s3://{self.factory.config.RAW_DUMP_BUCKET}/{current.replace('.csv', '_price.csv')}"
         )
-        price_df.columns = ["Issuer", "Floor_Price_XRP", "Max_Buy_Offer_XRP", "Mid_Price_XRP", "Price"]
+        price_df.columns = [
+            "Issuer",
+            "Floor_Price_XRP",
+            "Max_Buy_Offer_XRP",
+            "Mid_Price_XRP",
+            "Price",
+        ]
         for file in files:
             self._process_file(file, dic, price_df, num_col)
 

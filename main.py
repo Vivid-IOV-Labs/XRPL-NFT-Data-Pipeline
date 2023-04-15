@@ -1,11 +1,12 @@
 import asyncio
+import logging
 import sys
 import time
 from multiprocessing import Process
-import logging
-from sls_lambda import NFTokenPriceDump, NFTokenDump, IssuerPriceDump, NFTaxonDump, CSVDump, TableDump, TwitterDump, GraphDumps
-from utilities import factory
 
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
+                        NFTokenDump, NFTokenPriceDump, TableDump, TwitterDump)
+from utilities import factory
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -15,7 +16,6 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
-
 
 
 if __name__ == "__main__":
@@ -60,5 +60,7 @@ if __name__ == "__main__":
         p2.join()
         p3.join()
     else:
-        logger.info("Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`")
+        logger.info(
+            "Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`"
+        )
     logger.info(f"Executed in {time.time() - start}")

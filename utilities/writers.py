@@ -1,9 +1,9 @@
-from abc import ABCMeta, abstractmethod
 import json
 import logging
 import os.path
-from typing import Dict
+from abc import ABCMeta, abstractmethod
 from io import BytesIO
+from typing import Dict
 
 import aioboto3
 

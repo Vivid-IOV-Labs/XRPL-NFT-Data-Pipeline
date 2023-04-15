@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+
 from billiard.pool import Pool
 
 from utilities import (chunks, fetch_dumped_taxon_prices,
@@ -136,7 +137,9 @@ class IssuerPriceDump(PricingLambdaRunner):
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
-                await cursor.execute(f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE issuer IN ({issuers_str}) GROUP BY issuer;")
+                await cursor.execute(
+                    f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE issuer IN ({issuers_str}) GROUP BY issuer;"
+                )
                 result = await cursor.fetchall()
             connection.close()
         return result
@@ -151,9 +154,11 @@ class IssuerPriceDump(PricingLambdaRunner):
             "issuer": issuer,
             "floor_price": floor_price,
             "max_buy_offer": max_buy_offer,
-            "mid_price": mid_price
+            "mid_price": mid_price,
         }
-        await self.writer.write_json(f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data)
+        await self.writer.write_json(
+            f"{now.strftime('%Y-%m-%d-%H')}/{issuer}/price.json", data
+        )
 
     def _run(self, issuer):
         pass
@@ -162,8 +167,6 @@ class IssuerPriceDump(PricingLambdaRunner):
         issuers = self.factory.supported_issuers
         prices = await self._get_issuers_pricing(issuers)
         await asyncio.gather(*[self._dump_issuer_prices(pricing) for pricing in prices])
-
-
 
     # async def _dump_issuer_pricing(self, issuer):  # noqa
     #     """

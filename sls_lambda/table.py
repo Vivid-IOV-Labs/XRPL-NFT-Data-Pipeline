@@ -11,6 +11,7 @@ from .base import BaseLambdaRunner
 
 logger = logging.getLogger("app_log")
 
+
 class TableDump(BaseLambdaRunner):
     def __init__(self, factory):
         super().__init__(factory)
@@ -66,19 +67,36 @@ class TableDump(BaseLambdaRunner):
             ["issuer", "logo_url", "banner_url", "name", "promoted"]
         ].apply(lambda x: x.to_json(), axis=1)
 
-        df[[
-            "pricexrp", "pricexrp_previous",
-            "floor_price_xrp", "floor_price_xrp_previous",
-            "mid_price_xrp", "mid_price_xrp_previous",
-            "max_buy_offer_xrp", "max_buy_offer_xrp_previous",
-            "market_cap", "market_cap_previous"
-        ]] = df[[
-            "pricexrp", "pricexrp_previous",
-            "floor_price_xrp", "floor_price_xrp_previous",
-            "mid_price_xrp", "mid_price_xrp_previous",
-            "max_buy_offer_xrp", "max_buy_offer_xrp_previous",
-            "market_cap", "market_cap_previous"
-        ]] / 1000000
+        df[
+            [
+                "pricexrp",
+                "pricexrp_previous",
+                "floor_price_xrp",
+                "floor_price_xrp_previous",
+                "mid_price_xrp",
+                "mid_price_xrp_previous",
+                "max_buy_offer_xrp",
+                "max_buy_offer_xrp_previous",
+                "market_cap",
+                "market_cap_previous",
+            ]
+        ] = (
+            df[
+                [
+                    "pricexrp",
+                    "pricexrp_previous",
+                    "floor_price_xrp",
+                    "floor_price_xrp_previous",
+                    "mid_price_xrp",
+                    "mid_price_xrp_previous",
+                    "max_buy_offer_xrp",
+                    "max_buy_offer_xrp_previous",
+                    "market_cap",
+                    "market_cap_previous",
+                ]
+            ]
+            / 1000000
+        )
 
         df["value"] = df["holder_count"].fillna(0.0).astype(int)
         df["direction_of_change"] = (
@@ -90,23 +108,24 @@ class TableDump(BaseLambdaRunner):
             lambda x: x.to_json(), axis=1
         )
 
-        price_cols = ["pricexrp", "floor_price_xrp", "mid_price_xrp", "max_buy_offer_xrp"]
+        price_cols = [
+            "pricexrp",
+            "floor_price_xrp",
+            "mid_price_xrp",
+            "max_buy_offer_xrp",
+        ]
         for col in price_cols:
             df["value"] = df[col]
             df["percentage_change"] = round(
-                abs(
-                    (df[col] - df[f"{col}_previous"])
-                    / df[f"{col}_previous"]
-                    * 100
-                ),
+                abs((df[col] - df[f"{col}_previous"]) / df[f"{col}_previous"] * 100),
                 2,
             )
             df["direction_of_change"] = (
                 np.sign(df[col] - df[f"{col}_previous"]).fillna(0.0).astype(int)
             )
-            df[col] = df[
-                ["value", "percentage_change", "direction_of_change"]
-            ].apply(lambda x: x.to_json(), axis=1)
+            df[col] = df[["value", "percentage_change", "direction_of_change"]].apply(
+                lambda x: x.to_json(), axis=1
+            )
 
         df["market_cap"] = df["market_cap"].astype(float)
         df = df.sort_values(by=["market_cap"], ascending=False)
@@ -225,4 +244,5 @@ class TableDump(BaseLambdaRunner):
 
     def sync_run(self):
         import asyncio
+
         asyncio.run(self.run())
