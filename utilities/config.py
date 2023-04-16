@@ -15,6 +15,7 @@ class Config:
     ACCESS_KEY_ID = os.getenv("ACC_K_ID")
     SECRET_ACCESS_KEY = os.getenv("ASC_KY")
     PRICE_DUMP_BUCKET = os.getenv("PRICE_DUMP_BUCKET")
+    TAXON_PRICE_DUMP_BUCKET = os.getenv("TAXON_PRICE_DUMP_BUCKET")
     NFT_DUMP_BUCKET = os.getenv("NFT_DUMP_BUCKET")
     NFTS_SHEET_URL = os.getenv("NFT_SHEETS_URL")
     RAW_DUMP_BUCKET = os.getenv("CSV_DUMP_BUCKET")

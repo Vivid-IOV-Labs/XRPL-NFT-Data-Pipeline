@@ -9,6 +9,7 @@ class Factory:
         self._config = config
         self._bucket_mapping = {
             "price": config.PRICE_DUMP_BUCKET,
+            "taxon-price": config.TAXON_PRICE_DUMP_BUCKET,
             "nft": config.NFT_DUMP_BUCKET,
             "csv": config.RAW_DUMP_BUCKET,
             "data": config.DATA_DUMP_BUCKET,

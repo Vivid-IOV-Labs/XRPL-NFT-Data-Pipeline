@@ -5,7 +5,7 @@ import time
 from multiprocessing import Process
 
 from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
-                        NFTokenDump, NFTokenPriceDump, TableDump, TwitterDump)
+                        NFTokenDump, NFTokenPriceDump, TableDump, TwitterDump, TaxonPriceDump)
 from utilities import factory
 
 logger = logging.getLogger("app_log")
@@ -33,6 +33,9 @@ if __name__ == "__main__":
     elif section == "issuer-pricing":
         runner = IssuerPriceDump(factory)
         asyncio.run(runner.run())
+    elif section == "taxon-pricing":
+        runner = TaxonPriceDump(factory)
+        runner.run()
     elif section == "csv-dump":
         runner = CSVDump(factory)
         asyncio.run(runner.run())
