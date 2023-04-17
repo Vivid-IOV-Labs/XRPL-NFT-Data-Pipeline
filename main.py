@@ -27,9 +27,6 @@ if __name__ == "__main__":
     elif section == "taxon-dump":
         runner = NFTaxonDump(factory)
         asyncio.run(runner.run())
-    elif section == "taxon-pricing":
-        runner = NFTokenPriceDump(factory)
-        runner.run()
     elif section == "issuer-pricing":
         runner = IssuerPriceDump(factory)
         asyncio.run(runner.run())

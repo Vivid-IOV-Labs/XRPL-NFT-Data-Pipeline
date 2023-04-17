@@ -1,7 +1,7 @@
 import pandas as pd
 
-from utilities import (AsyncS3FileWriter, BaseFileWriter, DataBaseClient,
-                       LocalFileWriter)
+from .writers import AsyncS3FileWriter, LocalFileWriter, BaseFileWriter
+from .db import DataBaseClient
 
 
 class Factory:
