@@ -55,13 +55,6 @@ def csv_dump():
 
     invoke_csv_dump(factory.config)
 
-def taxon_price_summary():
-    from sls_lambda import TaxonPriceDump
-    from utilities import factory
-
-    runner = TaxonPriceDump(factory)
-    runner.run()
-
 
 default_args = {
     "owner": "peerkat",
@@ -81,10 +74,6 @@ with DAG(
     start_date=datetime(2023, 3, 28),
     catchup=False,
 ) as dag:
-    run_taxon_price_summary = PythonOperator(
-        task_id="taxon-price-summary",
-        python_callable=taxon_price_summary
-    )
 
     run_token_taxon_dump = PythonOperator(
         task_id="token-taxon-dump",
@@ -106,4 +95,4 @@ with DAG(
         python_callable=csv_dump,
     )
 
-    [run_token_taxon_dump, run_taxon_price_summary] >> run_issuer_pricing >> run_csv_dump
+    run_token_taxon_dump >> run_issuer_pricing >> run_csv_dump
