@@ -24,12 +24,8 @@ async def token_taxon_invoker():
 
 
 def xls20_data_pipeline():
-    # taxon_price_runner = NFTokenPriceDump(factory)
     issuer_price_runner = IssuerPriceDump(factory)
     start = time.time()
-    # asyncio.run(token_taxon_invoker())
-
-    # taxon_price_runner.run()
     asyncio.run(issuer_price_runner.run())
 
     invoke_csv_dump(factory.config)
