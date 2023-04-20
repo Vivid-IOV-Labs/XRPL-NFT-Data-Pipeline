@@ -24,10 +24,10 @@ RETURNS TRIGGER AS $$
 BEGIN
   UPDATE nft_pricing_summary
   SET floor_price = (
-    SELECT MIN(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND currency = '' AND amount::DECIMAL != 0
+    SELECT MIN(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND currency = '' AND amount::DECIMAL != 0 AND accept_offer_hash is null AND cancel_offer_hash is null
   ),
   max_buy_offer = (
-    SELECT MAX(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND currency = ''
+    SELECT MAX(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND currency = '' AND accept_offer_hash is null AND cancel_offer_hash is null
   )
   WHERE nft_token_id = NEW.nft_token_id;
 
@@ -42,6 +42,6 @@ $$ LANGUAGE plpgsql;
 
 -- Creates the Trigger --
 CREATE TRIGGER price_summary_update_trigger
-AFTER INSERT ON nft_buy_sell_offers
+AFTER INSERT OR UPDATE ON nft_buy_sell_offers
 FOR EACH ROW
 EXECUTE FUNCTION update_token_price_summary();
