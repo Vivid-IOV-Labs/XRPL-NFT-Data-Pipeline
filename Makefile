@@ -15,3 +15,6 @@ trigger-setup:
 	python trigger.py
 	mv psycopg2-new psycopg2
 
+run-test:
+	pytest
+

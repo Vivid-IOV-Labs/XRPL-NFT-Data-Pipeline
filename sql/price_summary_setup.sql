@@ -13,7 +13,7 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.nft_buy_sell_offers
     OWNER to postgres;
 
-ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
+-- ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
 
 -- Drops the Trigger If it already exists --
 DROP TRIGGER IF EXISTS price_summary_update_trigger ON nft_buy_sell_offers;

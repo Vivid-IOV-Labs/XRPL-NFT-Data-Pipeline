@@ -2,20 +2,18 @@ import time
 
 import pytest
 
-from sls_lambda import IssuerPriceDump, NFTaxonDump, NFTokenDump
+from sls_lambda import IssuerPriceDump, TaxonPriceDump, NFTokenDump, NFTaxonDump
 from utilities import factory
 
-
-# def test_token_price_dump():
-#     start = time.time()
-#     runner = NFTokenPriceDump(factory)
-#     runner.run()
-#     print(f"Executed in {time.time() - start}")
-
-
-def test_issuer_price_dump():
+def test_taxon_price_dump(setup):
     start = time.time()
-    runner = IssuerPriceDump(factory)
+    runner = TaxonPriceDump(setup["factory"])
+    runner.run()
+    print(f"Executed in {time.time() - start}")
+
+def test_issuer_price_dump(setup):
+    start = time.time()
+    runner = IssuerPriceDump(setup["factory"])
     runner.run()
     print(f"Executed in {time.time() - start}")
 
