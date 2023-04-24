@@ -37,6 +37,8 @@ class CSVDump(BaseLambdaRunner):
                 "issuer": "ISSUER",
                 "supply": "SUPPLY",
                 "circulation": "CIRCULATION",
+                "holders": "HOLDER_COUNT",
+                "tokens_held": "TOKENS_HELD"
             },
             inplace=True,
         )
@@ -73,11 +75,12 @@ class CSVDump(BaseLambdaRunner):
                 "MAX_BUY_OFFER_XRP",
                 "SUPPLY",
                 "CIRCULATION",
+                "HOLDER_COUNT",
+                "TOKENS_HELD"
             ]
         ].copy()
         final_df["MARKET_CAP"] = final_df["SUPPLY"] * final_df["PRICEXRP"]
         final_df["HELD_0"] = final_df["SUPPLY"] - final_df["CIRCULATION"]
-        final_df["HOLDER_COUNT"] = final_df["CIRCULATION"]
         final_df["TWITTER"] = final_df["TWITTER"].str.split("/").str[-1]
         await asyncio.gather(
             *[
