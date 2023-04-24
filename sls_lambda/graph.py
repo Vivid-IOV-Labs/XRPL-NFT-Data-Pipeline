@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import logging
-from io import StringIO
+from io import BytesIO
 
 import numpy as np
 import pandas as pd
@@ -32,7 +32,7 @@ class GraphDumps(BaseLambdaRunner):
         except FileNotFoundError:
             logger.info(f"file not found for {path}")
 
-    def run(self) -> None:
+    async def _run(self) -> None:
         files = sorted(
             [
                 f"{(datetime.datetime.utcnow() - datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.csv"
@@ -58,85 +58,56 @@ class GraphDumps(BaseLambdaRunner):
         ]
         for file in files:
             self._process_file(file, dic, price_df, num_col)
-
+        __import__("ipdb").set_trace()
         for col in num_col:
             df = pd.DataFrame(dic[col], columns=["x", "y"])
             df_new = df.copy()
             df_new["x"] = df_new["x"] * 1000
             pct = get_pct(df, latest_unix)
-            if self.factory.config.ENVIRONMENT == "LOCAL":
-                write_df(df_new, f"data/json_dumps/{col}_Graph.json", "json")
-                if col == "Market_Cap":
-                    day_df = get_day_df(df, 24)  # noqa
-                    week_df = get_weekly_df(df, 168)
-                    month_df = get_monthly_df(df, 672)
-                    day_df["x"] = day_df["x"] * 1000
-                    week_df["x"] = week_df["x"] * 1000
-                    month_df["x"] = month_df["x"] * 1000
-                    write_df(day_df, f"data/json_dumps/{col}_Graph_Day.json", "json")
-                    write_df(week_df, f"data/json_dumps/{col}_Graph_Week.json", "json")
-                    write_df(
-                        month_df, f"data/json_dumps/{col}_Graph_Month.json", "json"
-                    )
-                with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
-                    file.write(pct)
+            if col == "Market_Cap":
+                day_df = get_day_df(df, 24)  # noqa
+                week_df = get_weekly_df(df, 168)
+                month_df = get_monthly_df(df, 672)
+                day_df["x"] = day_df["x"] * 1000
+                week_df["x"] = week_df["x"] * 1000
+                month_df["x"] = month_df["x"] * 1000
+
+                await asyncio.gather(*[
+                    self.writer.write_df(
+                    df_new,
+                    f"xls20/latest/{col}_Graph.json",
+                    "json",
+                ), self.writer.write_df(
+                    df,
+                    f"xls20/history/{int(latest_unix)}/{col}_Graph.json",
+                    "json",
+                ), self.writer.write_df(
+                    day_df,
+                    f"xls20/latest/{col}_Graph_Day.json",
+                    "json",
+                ), self.writer.write_df(
+                    week_df,
+                    f"xls20/latest/{col}_Graph_Week.json",
+                    "json",
+                ), self.writer.write_df(
+                    month_df,
+                    f"xls20/latest/{col}_Graph_Month.json",
+                    "json",
+                )])
             else:
-                if col == "Market_Cap":
-                    write_df(
-                        df_new,
-                        f"xls20/latest/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    day_df = get_day_df(df, 24)  # noqa
-                    week_df = get_weekly_df(df, 168)
-                    month_df = get_monthly_df(df, 672)
-                    day_df["x"] = day_df["x"] * 1000
-                    week_df["x"] = week_df["x"] * 1000
-                    month_df["x"] = month_df["x"] * 1000
-                    write_df(
-                        df,
-                        f"xls20/history/{int(latest_unix)}/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        day_df,
-                        f"xls20/latest/{col}_Graph_Day.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        week_df,
-                        f"xls20/latest/{col}_Graph_Week.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        month_df,
-                        f"xls20/latest/{col}_Graph_Month.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                else:
-                    week_df = get_day_df(df, 168)
-                    write_df(
-                        week_df,
-                        f"xls20/latest/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                buffer = StringIO()
-                buffer.write(pct)
-                s3 = get_s3_resource()
-                s3.Object(
-                    self.factory.config.DATA_DUMP_BUCKET,
-                    f"xls20/history/{int(latest_unix)}/{col}_Percentage_Change.json",
-                ).put(Body=buffer.getvalue())
-                s3.Object(
-                    self.factory.config.DATA_DUMP_BUCKET,
-                    f"xls20/latest/{col}_Percentage_Change.json",
-                ).put(Body=buffer.getvalue())
+                week_df = get_day_df(df, 168)
+                await self.writer.write_df(
+                    week_df,
+                    f"xls20/latest/{col}_Graph.json",
+                    "json",
+                )
+            await asyncio.gather(*[
+                self.writer.write_json(f"xls20/history/{int(latest_unix)}/{col}_Percentage_Change.json", pct),
+                self.writer.write_json(f"xls20/latest/{col}_Percentage_Change.json", pct)
+            ])
+
+    def run(self) -> None:
+        asyncio.run(self._run())
 
 class TaxonPriceGraph(BaseLambdaRunner):
     def __init__(self, factory):

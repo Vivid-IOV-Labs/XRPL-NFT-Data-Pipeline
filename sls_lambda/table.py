@@ -22,15 +22,10 @@ class TableDump(BaseLambdaRunner):
         issuers_df = self.factory.issuers_df
         config = self.factory.config
 
-        write_df(
-            issuers_df,
-            f"xls20/latest/NFT_Collections_Profile.json",
-            "json",
-            bucket=config.DATA_DUMP_BUCKET,
-        )
+        await self.writer.write_df(issuers_df, "xls20/latest/NFT_Collections_Profile.json", "json")
 
         current_time = datetime.datetime.utcnow()
-        # day_ago = current_time - datetime.timedelta(days=1)
+
         current = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
         previous = (
             datetime.datetime.strptime(current, "%Y-%m-%d-%H")

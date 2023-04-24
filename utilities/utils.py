@@ -161,7 +161,8 @@ def get_pct(df, t):
             },
         },
     }
-    return json.dumps(pct_dic)
+    return pct_dic
+    # return json.dumps(pct_dic)
 
 
 def get_s3_resource():

@@ -2,7 +2,6 @@ import pytest
 
 from utilities import AsyncS3FileWriter, LocalFileWriter
 
-
 # @pytest.mark.asyncio
 # async def test_local_file_writer(fs_fixture):
 #     pass
