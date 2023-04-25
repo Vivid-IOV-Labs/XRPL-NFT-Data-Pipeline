@@ -214,6 +214,7 @@ class TableDump(BaseLambdaRunner):
                 "rank",
                 "project",
                 "holder_count",
+                "tokens_held",
                 "social_activity",
                 "price_xrp",
                 "pricexrp",
