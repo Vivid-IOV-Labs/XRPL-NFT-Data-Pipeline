@@ -47,7 +47,7 @@ class NFTokenDump(BaseLambdaRunner):
                     if token["Owner"].lower() != issuer.lower()
                 ]
             ),
-            "holders": len({token["NFTokenID"] for token in data["nfts"]})
+            "holders": len({token["Owner"] for token in data["nfts"]})
         }
         return_data["tokens_held"] = return_data["supply"] - return_data["circulation"]
         return return_data
