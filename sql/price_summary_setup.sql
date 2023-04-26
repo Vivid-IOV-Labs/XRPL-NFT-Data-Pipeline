@@ -1,7 +1,7 @@
 -- Create Price Summary Table --
 CREATE TABLE IF NOT EXISTS nft_pricing_summary
 (
-	nft_token_id text COLLATE pg_catalog."default",
+	nft_token_id text COLLATE pg_catalog."default" UNIQUE,
 	floor_price text COLLATE pg_catalog."default",
 	max_buy_offer text COLLATE pg_catalog."default",
 	issuer text COLLATE pg_catalog."default",
@@ -10,10 +10,10 @@ CREATE TABLE IF NOT EXISTS nft_pricing_summary
 
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.nft_buy_sell_offers
-    OWNER to postgres;
+-- ALTER TABLE IF EXISTS public.nft_buy_sell_offers
+--     OWNER to postgres;
 
-ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
+-- ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
 
 -- Drops the Trigger If it already exists --
 DROP TRIGGER IF EXISTS price_summary_update_trigger ON nft_buy_sell_offers;
