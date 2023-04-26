@@ -12,6 +12,6 @@ deploy-dev:
 
 trigger-setup:
 	mv psycopg2 psycopg2-new
-	python trigger.py
+	python3.9 trigger.py
 	mv psycopg2-new psycopg2
 
