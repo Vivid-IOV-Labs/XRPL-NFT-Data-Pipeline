@@ -79,6 +79,7 @@ class TableDump(BaseLambdaRunner):
                 "max_buy_offer_xrp_previous",
                 "market_cap",
                 "market_cap_previous",
+                "volume"
             ]
         ] = (
             df[
@@ -93,6 +94,7 @@ class TableDump(BaseLambdaRunner):
                     "max_buy_offer_xrp_previous",
                     "market_cap",
                     "market_cap_previous",
+                    "volume"
                 ]
             ]
             / 1000000
@@ -222,6 +224,7 @@ class TableDump(BaseLambdaRunner):
                 "mid_price_xrp",
                 "max_buy_offer_xrp",
                 "market_cap",
+                "volume",
                 "tweets",
                 "re_tweets",
                 "likes",
