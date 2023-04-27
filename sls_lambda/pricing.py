@@ -153,6 +153,23 @@ class TaxonPriceDump(PricingLambdaRunner):
             connection.close()
         return result
 
+    async def _get_volume(self):
+        pool = await self.db_client.create_db_pool()
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary GROUP BY issuer, taxon"  # noqa
+                )
+                result = await cursor.fetchall()
+            connection.close()
+        return result
+
+    async def _dump_issuer_taxon_volume(self):
+        now = datetime.datetime.utcnow()
+        volumes = await self._get_volume()
+        data = [{"issuer": issuer, "taxon": taxon, "volume": int(volume) } for (issuer, taxon, volume) in volumes]
+        await self.writer.write_json(f"volume/{now.strftime('%Y-%m-%d-%H')}.json", data)
+
     async def _dump_taxon_pricing(self, taxon, issuer, pool):
         now = datetime.datetime.utcnow()
         offers = await self._get_taxon_offers(pool, taxon, issuer)
@@ -221,6 +238,7 @@ class TaxonPriceDump(PricingLambdaRunner):
         )
 
     async def _dump_issuers_taxons_pricing(self):  # noqa
+        await self._dump_issuer_taxon_volume()
         prices = await self._get_taxon_price_summary()
         await asyncio.gather(*[self._dump_issuer_taxon_pricing(data) for data in prices])
 
