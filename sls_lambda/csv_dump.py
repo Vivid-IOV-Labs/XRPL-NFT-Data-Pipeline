@@ -16,10 +16,15 @@ class CSVDump(BaseLambdaRunner):
     async def run(self) -> None:
         issuers = self.factory.supported_issuers
         last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
-        supply = await read_json(
+        supply, volume = await asyncio.gather(*[read_json(
             self.factory.config.NFT_DUMP_BUCKET, "supply.json", self.factory.config
-        )
+        ), read_json(
+            self.factory.config.TAXON_PRICE_DUMP_BUCKET,
+                f"volume/{last_hour}.json",
+                self.factory.config,
+        )])
         supply_df = pd.DataFrame(supply)
+        volume_df = pd.DataFrame(volume)
         issuers_df = self.factory.issuers_df
         prices = await asyncio.gather(
             *[
@@ -42,6 +47,13 @@ class CSVDump(BaseLambdaRunner):
             },
             inplace=True,
         )
+        volume_df.rename(
+            columns={
+                "issuer": "ISSUER",
+                "volume": "VOLUME",
+            },
+            inplace=True,
+        )
         issuers_df.rename(
             columns={
                 "Issuer_Account": "ISSUER",
@@ -61,7 +73,10 @@ class CSVDump(BaseLambdaRunner):
             inplace=True,
         )
         price_df["PRICEXRP"] = price_df["MID_PRICE_XRP"]
-        merged_1 = price_df.merge(supply_df, how="inner", on=["ISSUER"])
+
+        supply_volume_merge = supply_df.merge(volume_df, how="left", on=["ISSUER"])
+        supply_volume_merge = supply_volume_merge.fillna(0)
+        merged_1 = price_df.merge(supply_volume_merge, how="inner", on=["ISSUER"])
         final_merge = merged_1.merge(issuers_df, how="inner", on=["ISSUER"])
         final_df = final_merge[
             [
@@ -73,6 +88,7 @@ class CSVDump(BaseLambdaRunner):
                 "FLOOR_PRICE_XRP",
                 "MID_PRICE_XRP",
                 "MAX_BUY_OFFER_XRP",
+                "VOLUME",
                 "SUPPLY",
                 "CIRCULATION",
                 "HOLDER_COUNT",
