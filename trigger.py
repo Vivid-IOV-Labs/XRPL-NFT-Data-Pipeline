@@ -27,4 +27,15 @@ async def volume_trigger_setup():
         await execute_sql_file(connection, "sql/volume_summary_update.sql")
         connection.close()
 
-asyncio.run(volume_trigger_setup())
+async def xrp_amount_update():
+    db_client = factory.get_db_client()
+    db_client.config.PROXY_CONN_INFO[
+        "host"
+    ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"
+
+    pool = await db_client.create_db_pool()
+    async with pool.acquire() as connection:
+        await execute_sql_file(connection, "sql/xrp_amount_update.sql")
+        connection.close()
+
+asyncio.run(xrp_amount_update())
