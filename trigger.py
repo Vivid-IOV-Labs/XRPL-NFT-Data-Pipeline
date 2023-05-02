@@ -38,4 +38,5 @@ async def xrp_amount_update():
         await execute_sql_file(connection, "sql/xrp_amount_update.sql")
         connection.close()
 
-asyncio.run(xrp_amount_update())
+asyncio.run(pricing_trigger_setup())
+asyncio.run(volume_trigger_setup())
