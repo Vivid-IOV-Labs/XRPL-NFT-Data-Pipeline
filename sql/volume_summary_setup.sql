@@ -22,7 +22,7 @@ BEGIN
       nft_token_id_value TEXT := NEW.nft_token_id;
       taxon_value NUMERIC := NEW.taxon;
       issuer_value TEXT := NEW.issuer;
-      amount_value NUMERIC := NEW.amount;
+      amount_value NUMERIC := NEW.xrp_amount;
     BEGIN
       -- Insert or update the nft_volume_summary table with the nft_token_id, taxon, issuer, and amount values
       INSERT INTO nft_volume_summary (nft_token_id, taxon, issuer, volume)

@@ -24,10 +24,10 @@ RETURNS TRIGGER AS $$
 BEGIN
   UPDATE nft_pricing_summary
   SET floor_price = (
-    SELECT MIN(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND currency = '' AND amount::DECIMAL != 0 AND accept_offer_hash is null AND cancel_offer_hash is null
+    SELECT MIN(xrp_amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND xrp_amount::DECIMAL != 0 AND accept_offer_hash is null AND cancel_offer_hash is null
   ),
   max_buy_offer = (
-    SELECT MAX(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND currency = '' AND accept_offer_hash is null AND cancel_offer_hash is null
+    SELECT MAX(xrp_amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND accept_offer_hash is null AND cancel_offer_hash is null
   )
   WHERE nft_token_id = NEW.nft_token_id;
 
