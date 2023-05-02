@@ -167,7 +167,7 @@ class TaxonPriceDump(PricingLambdaRunner):
     async def _dump_issuer_taxon_volume(self):
         now = datetime.datetime.utcnow()
         volumes = await self._get_volume()
-        data = [{"issuer": issuer, "taxon": taxon, "volume": int(volume) } for (issuer, taxon, volume) in volumes]
+        data = [{"issuer": issuer, "taxon": taxon, "volume": int(volume) if volume is not None else 0 } for (issuer, taxon, volume) in volumes]
         await self.writer.write_json(f"volume/{now.strftime('%Y-%m-%d-%H')}.json", data)
 
     async def _dump_taxon_pricing(self, taxon, issuer, pool):
