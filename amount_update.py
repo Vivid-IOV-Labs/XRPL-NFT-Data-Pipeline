@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import json
 
-from utilities import factory
+from utilities import factory, chunks
 
 
 async def fetch_null_offers():
@@ -47,7 +47,7 @@ async def update_xrp_amount(offer_index, amount, currency, price_dict):
                 # noqa
             )
             connection.close()
-            print(f"Update Price For Offer Index: {offer_index} with Amount: {amount}")
+            print(f"Update Price For Offer Index: {offer_index} with Amount: {amount} And XRP: {to_droplets}")
 
 async def run():
     null_offers = await fetch_null_offers()
@@ -56,7 +56,8 @@ async def run():
     for pair in issuer_currencies:
         data = await convert_to_xrp(pair[1], pair[0])
         currency_prices[pair[1]] = data
-    await asyncio.gather(*[update_xrp_amount(offer_index, amount, currency, currency_prices) for (issuer, currency, amount, offer_index) in null_offers])
+    for chunk in chunks(null_offers, 100):
+        await asyncio.gather(*[update_xrp_amount(offer_index, amount, currency, currency_prices) for (issuer, currency, amount, offer_index) in chunk])
 
 if __name__ == "__main__":
     asyncio.run(run())
