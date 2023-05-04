@@ -15,3 +15,8 @@ trigger-setup:
 	python3.9 trigger.py
 	mv psycopg2-new psycopg2
 
+amount-update:
+	mv psycopg2 psycopg2-new
+	python3.9 amount_update.py
+	mv psycopg2-new psycopg2
+
