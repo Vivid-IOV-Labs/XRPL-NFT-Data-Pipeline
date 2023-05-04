@@ -46,9 +46,8 @@ async def update_xrp_amount(offer_index, amount, currency, price_dict):
                 f"UPDATE nft_buy_sell_offers SET xrp_amount = {to_droplets} WHERE offer_index = {offer_index}"
                 # noqa
             )
-            result = await cursor.fetchall()
             connection.close()
-            return result
+            print(f"Update Price For Offer Index: {offer_index} with Amount: {amount}")
 
 async def run():
     null_offers = await fetch_null_offers()
