@@ -43,7 +43,7 @@ async def update_xrp_amount(offer_index, amount, currency, price_dict):
     async with pool.acquire() as connection:
         async with connection.cursor() as cursor:
             await cursor.execute(
-                f"UPDATE nft_buy_sell_offers SET xrp_amount = {to_droplets} WHERE offer_index = {offer_index}"
+                f"UPDATE nft_buy_sell_offers SET xrp_amount = {to_droplets} WHERE offer_index = '{offer_index}'"
                 # noqa
             )
             connection.close()
