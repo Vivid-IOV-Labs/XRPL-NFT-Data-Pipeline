@@ -42,10 +42,14 @@ async def update_xrp_amount(offer_index, amount, currency, price_dict):
     pool = await db_client.create_db_pool()
     async with pool.acquire() as connection:
         async with connection.cursor() as cursor:
-            await cursor.execute(
-                f"UPDATE nft_buy_sell_offers SET xrp_amount = {to_droplets} WHERE offer_index = '{offer_index}'"
-                # noqa
-            )
+            try:
+                await cursor.execute(
+                    f"UPDATE nft_buy_sell_offers SET xrp_amount = {to_droplets} WHERE offer_index = '{offer_index}'"
+                    # noqa
+                )
+            except Exception as e:
+                print(e)
+                return
             connection.close()
             print(f"Update Price For Offer Index: {offer_index} with Amount: {amount} And XRP: {to_droplets}")
 
