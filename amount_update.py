@@ -7,9 +7,6 @@ from utilities import factory
 
 async def fetch_null_offers():
     db_client = factory.get_db_client()
-    db_client.config.PROXY_CONN_INFO[
-        "host"
-    ] = "xrpl-production-datastore.cluster-ro-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"
 
     pool = await db_client.create_db_pool()
     async with pool.acquire() as connection:
