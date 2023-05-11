@@ -20,3 +20,8 @@ amount-update:
 	python3.9 amount_update.py
 	mv psycopg2-new psycopg2
 
+load-nixer:
+	mv psycopg2 psycopg2-new
+	python3.9 nixer-offer-loader.py
+	mv psycopg2-new psycopg2
+

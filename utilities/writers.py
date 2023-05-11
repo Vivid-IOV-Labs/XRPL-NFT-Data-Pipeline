@@ -3,7 +3,7 @@ import logging
 import os.path
 from abc import ABCMeta, abstractmethod
 from io import BytesIO
-from typing import Dict
+from typing import Dict, Union, List
 
 import aioboto3
 
@@ -17,7 +17,7 @@ class BaseFileWriter(metaclass=ABCMeta):
     async def _write(self, path: str, buffer: BytesIO) -> None:
         raise NotImplementedError
 
-    async def write_json(self, path: str, data: Dict) -> None:
+    async def write_json(self, path: str, data: Union[Dict, List]) -> None:
         to_bytes = json.dumps(data, indent=4).encode("utf-8")
         buffer = BytesIO()
         buffer.write(to_bytes)
