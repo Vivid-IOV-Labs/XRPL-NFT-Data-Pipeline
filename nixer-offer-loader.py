@@ -65,7 +65,8 @@ async def fetch_offer_details_from_bithomp_api(offer_index: str):
 
 async def fetch_and_add_offer_details_to_map(offer_index: str, offer_map: Dict):
     offer_details = await fetch_offer_details_from_bithomp_api(offer_index)
-    offer_map[offer_index] = offer_details
+    if offer_details is not None:
+        offer_map[offer_index] = offer_details
 
 async def dump_nixer_offer(issuer):
     taxon = issuer_taxon_map[issuer]
@@ -101,8 +102,6 @@ async def dump_nixer_offers_for_all_issuers():
                     to_append["amount_currency"] = amount_details["currency"]
                 else:
                     to_append["amount_xrp"] = buy_offer["Amount"]
-                offer_details = await fetch_offer_details_from_bithomp_api(to_append["offer_id"])
-                to_append["offer_details"] = offer_details
                 final_data.append(to_append)
             for sell_offer in token["sell"]:
                 to_append = {
@@ -124,28 +123,36 @@ async def dump_nixer_offers_for_all_issuers():
                     to_append["amount_currency"] = amount_details["currency"]
                 else:
                     to_append["amount_xrp"] = sell_offer["Amount"]
-                offer_details = await fetch_offer_details_from_bithomp_api(to_append["offer_id"])
-                to_append["offer_details"] = offer_details
                 final_data.append(to_append)
     await writer.write_json("nixer-offer-dump.json", final_data)
+
 
 async def dump_all_offer_details():
     final_data = {}
     current_batch = 1
-    all_offers = json.load(open(f"data/nixer-offer-dump.json", "r"))
+    all_offers = json.load(open("data/nixer-offer-dump.json", "r"))
     offer_ids = [offer["offer_id"] for offer in all_offers]
-    for chunk in chunks(offer_ids, 500):
+    try:
+        dumped_offer_details = json.load(open("data/offer-map.json", "r"))
+        final_data = dumped_offer_details
+    except FileNotFoundError:
+        dumped_offer_details = {}
+    offers_to_fetch = list(set(offer_ids) - set(list(dumped_offer_details.keys())))
+    print(f"Offers To Fetch: {len(offers_to_fetch)}\nNo of Batches: {len(offers_to_fetch)/100}")
+    for chunk in chunks(offers_to_fetch, 100):
         await asyncio.gather(*[fetch_and_add_offer_details_to_map(offer_id, final_data) for offer_id in chunk])
         print(f"Completed Batch: {current_batch}")
         print(f"Offer Map Key Count: {len(final_data.keys())}")
         current_batch += 1
         await writer.write_json("offer-map.json", final_data)
+        print("sleeping for 60 seconds...")
+        time.sleep(60)
 
 async def main():
-    await dump_nixer_offers_for_all_issuers()
+    # await dump_nixer_offers_for_all_issuers()
+    await dump_all_offer_details()
 
 if __name__ == "__main__":
-    # all_offers = json.load(open(f"data/nixer-offer-dump.json", "r"))
-    # df = pd.DataFrame(all_offers)
-    # __import__("ipdb").set_trace()
+    start = time.monotonic_ns()
     asyncio.run(main())
+    print(f"Executed in {(time.monotonic_ns() - start)} nanoseconds")
