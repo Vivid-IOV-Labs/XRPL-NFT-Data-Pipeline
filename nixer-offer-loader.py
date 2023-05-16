@@ -148,9 +148,16 @@ async def dump_all_offer_details():
         print("sleeping for 60 seconds...")
         time.sleep(60)
 
+async def reformat_offer_details_dump():
+    data = json.load(open("data/offer-map.json", "r"))
+    offer_indexes = data.keys()
+    new_data = [data[offer_index] for offer_index in offer_indexes]
+    await writer.write_json("offer-map-formatted.json", new_data)
+
 async def main():
     # await dump_nixer_offers_for_all_issuers()
-    await dump_all_offer_details()
+    # await dump_all_offer_details()
+    await reformat_offer_details_dump()
 
 if __name__ == "__main__":
     start = time.monotonic_ns()
