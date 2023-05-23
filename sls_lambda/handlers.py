@@ -34,8 +34,9 @@ def issuers_price_dump(event, context):
 
 def csv_dump(event, context):
     runner = CSVDump(factory)
+    runner.run()
+
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(runner.run())
     loop.run_until_complete(
         asyncio.gather(
             *[
