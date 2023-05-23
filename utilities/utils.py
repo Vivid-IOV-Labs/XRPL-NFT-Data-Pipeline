@@ -87,7 +87,7 @@ async def read_json(bucket, key, config):
         try:
             res = await s3.get_object(Bucket=bucket, Key=key)
         except Exception as e:
-            print(e)
+            print(f"Error Reading JSON @ {key} in bucket: {bucket}\nError: {e}")
             return None
         body = res["Body"]
         data = await body.read()
