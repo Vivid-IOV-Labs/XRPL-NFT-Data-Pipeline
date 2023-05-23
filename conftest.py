@@ -13,7 +13,7 @@ async def test_db_setup(factory: Factory):
 
 @pytest.fixture(scope="session")
 def setup():
-    Config.ENVIRONMENT = "LOCAL"
+    Config.ENVIRONMENT = "TESTING"
     Config.DB_BASE_CONN_INFO = {
         "port": "5432",
         "database": "pkt_test",
