@@ -1,4 +1,6 @@
 import asyncio
+import os
+import datetime
 
 import pytest
 from utilities import Config, Factory, execute_sql_file
@@ -23,4 +25,8 @@ def setup():
     Config.PROXY_CONN_INFO = {"host": "localhost", **Config.DB_BASE_CONN_INFO}
     factory = Factory(Config)
     asyncio.run(test_db_setup(factory))
-    yield {"factory": factory}
+    yield {
+        "factory": factory,
+        "cwd": os.getcwd(),
+        "last_hour": datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
+    }
