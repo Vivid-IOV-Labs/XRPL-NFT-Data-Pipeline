@@ -4,7 +4,7 @@ from utilities import AsyncS3FileWriter, LocalFileWriter
 
 
 @pytest.mark.asyncio
-async def test_local_file_writer(fs_fixture):
+async def test_local_file_writer(setup):
     pass
     # local_test_dir = fs_fixture["local"]
     # writer = LocalFileWriter()
@@ -12,5 +12,5 @@ async def test_local_file_writer(fs_fixture):
 
 
 @pytest.mark.asyncio
-async def test_async_s3_file_writer(fs_fixture):
+async def test_async_s3_file_writer(setup):
     pass
