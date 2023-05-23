@@ -39,6 +39,15 @@ async def dump_tx_details(tx_hash: str, dumped: Dict):
                 print(f"Error Fetching Tx: {tx_hash} --> {data}")
                 dumped[tx_hash] = False
 
+def combined_dumps():
+    df = pd.read_csv("data/xpunks_results.tsv", sep="\t")
+    hashes = df["HASH"].to_list()
+    combined = []
+    for tx_hash in hashes:
+        data = json.load(open(f"data/local/tx/details/{tx_hash}.json", "r"))
+        combined.append(data)
+    asyncio.run(writer.write_json("tx/tx-combined.json", combined))
+
 async def main():
     df = pd.read_csv("data/xpunks_results.tsv", sep="\t")
     hashes = df["HASH"].to_list()
@@ -60,3 +69,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    combined_dumps()
