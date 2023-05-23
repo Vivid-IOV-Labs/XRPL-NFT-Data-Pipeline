@@ -42,6 +42,8 @@ class Factory:
     def get_writer(self, section=None) -> BaseFileWriter:
         if self._config.ENVIRONMENT == "LOCAL":
             return LocalFileWriter()
+        if self._config.ENVIRONMENT == "TESTING":
+            return LocalFileWriter(testing=True)
         return AsyncS3FileWriter(self._get_bucket(section))
 
     def get_db_client(self) -> DataBaseClient:

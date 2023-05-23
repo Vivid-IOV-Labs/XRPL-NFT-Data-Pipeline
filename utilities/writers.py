@@ -34,12 +34,23 @@ class BaseFileWriter(metaclass=ABCMeta):
 
 
 class LocalFileWriter(BaseFileWriter):
+
+    def __init__(self, testing=False):
+        if testing:
+            self.test_dir = "test"
+        else:
+            self.test_dir = None
+
     def _create_path(self, path):  # noqa
         if not os.path.exists(path):
             os.makedirs(path)
 
     async def _write(self, path, buffer):
-        path = f"data/{path}"
+        path = ""
+        if self.test_dir is not None:
+            path = f"data/testing/{path}"
+        else:
+            path = f"data/local/{path}"
         directory_path = "/".join(path.split("/")[:-1])
         self._create_path(directory_path)
         content = buffer.getvalue()
