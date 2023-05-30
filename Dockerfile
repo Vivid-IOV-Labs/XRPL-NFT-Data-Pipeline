@@ -4,3 +4,4 @@ RUN pip install --no-cache-dir --user -r /requirements.txt
 COPY sls_lambda /opt/airflow/dags/sls_lambda
 COPY utilities /opt/airflow/dags/utilities
 COPY .env /opt/airflow/.env
+COPY airflow.cfg /opt/airflow/airflow.cfg

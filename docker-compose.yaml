@@ -69,10 +69,10 @@ x-airflow-common:
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    AIRFLOW__LOGGING__REMOTE_LOGGING: 'true'
-    AIRFLOW_LOGGING_LOGGING_LEVEL: 'ERROR'
-    AIRFLOW_LOGGING_REMOTE_LOG_CONN_ID: 'S3LogStorage'
-    AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: 's3://peerkat-airflow-logs/airflow-logs'
+#    AIRFLOW__LOGGING__REMOTE_LOGGING: 'true'
+#    AIRFLOW_LOGGING_LOGGING_LEVEL: 'ERROR'
+#    AIRFLOW_LOGGING_REMOTE_LOG_CONN_ID: 'S3LogStorage'
+#    AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: 's3://peerkat-airflow-logs/airflow-logs'
 
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
