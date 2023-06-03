@@ -72,7 +72,7 @@ async def dump_nixer_offer(issuer):
     taxon = issuer_taxon_map[issuer]
     offers = await fetch_project_offers_from_nixer_api(issuer, taxon)
     if offers:
-        await writer.write_json(f"data/nixer-offers/{issuer}-{taxon}.json", offers)
+        await writer.write_json(f"nixer-offers/{issuer}-{taxon}.json", offers)
     else:
         print(f"Error For Issuer: {issuer} & Taxon: {taxon}")
 
@@ -80,7 +80,7 @@ async def dump_nixer_offers_for_all_issuers():
     final_data = []
     for issuer in issuers:
         taxon = issuer_taxon_map[issuer]
-        data = json.load(open(f"data/data/nixer-offers/{issuer}-{taxon}.json", "r"))
+        data = json.load(open(f"data/local/nixer-offers/{issuer}-{taxon}.json", "r"))
         for token in data["offers"]:
             for buy_offer in token["buy"]:
                 to_append = {
@@ -130,10 +130,10 @@ async def dump_nixer_offers_for_all_issuers():
 async def dump_all_offer_details():
     final_data = {}
     current_batch = 1
-    all_offers = json.load(open("data/nixer-offer-dump.json", "r"))
+    all_offers = json.load(open("data/local/nixer-offer-dump.json", "r"))
     offer_ids = [offer["offer_id"] for offer in all_offers]
     try:
-        dumped_offer_details = json.load(open("data/offer-map.json", "r"))
+        dumped_offer_details = json.load(open("data/local/offer-map.json", "r"))
         final_data = dumped_offer_details
     except FileNotFoundError:
         dumped_offer_details = {}
@@ -149,14 +149,17 @@ async def dump_all_offer_details():
         time.sleep(60)
 
 async def reformat_offer_details_dump():
-    data = json.load(open("data/offer-map.json", "r"))
+    data = json.load(open("data/local/offer-map.json", "r"))
     offer_indexes = data.keys()
     new_data = [data[offer_index] for offer_index in offer_indexes]
     await writer.write_json("offer-map-formatted.json", new_data)
 
 async def main():
-    # await dump_nixer_offers_for_all_issuers()
-    # await dump_all_offer_details()
+    # for chunk in chunks(issuers, 10):
+    #     await asyncio.gather(*[dump_nixer_offer(issuer) for issuer in chunk])
+    #     time.sleep(60)
+    await dump_nixer_offers_for_all_issuers()
+    await dump_all_offer_details()
     await reformat_offer_details_dump()
 
 if __name__ == "__main__":
