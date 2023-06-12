@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 from utilities import execute_sql_file, factory
 
@@ -38,5 +39,11 @@ async def xrp_amount_update():
         await execute_sql_file(connection, "sql/xrp_amount_update.sql")
         connection.close()
 
-asyncio.run(pricing_trigger_setup())
-asyncio.run(volume_trigger_setup())
+if __name__ == "__main__":
+    args = sys.argv
+    if args[1] == "price-trigger":
+        asyncio.run(pricing_trigger_setup())
+    elif args[1] == "volume-trigger":
+        asyncio.run(volume_trigger_setup())
+    elif args[1] == "amount-update":
+        asyncio.run(xrp_amount_update())

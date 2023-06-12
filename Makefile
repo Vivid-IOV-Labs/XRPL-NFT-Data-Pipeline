@@ -12,7 +12,8 @@ deploy-dev:
 
 trigger-setup:
 	mv psycopg2 psycopg2-new
-	python3.9 trigger.py
+	python3.9 trigger.py price-trigger
+	python3.9 trigger.py volume-trigger
 	mv psycopg2-new psycopg2
 
 amount-update:

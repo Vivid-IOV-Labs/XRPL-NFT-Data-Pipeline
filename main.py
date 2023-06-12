@@ -35,7 +35,7 @@ if __name__ == "__main__":
         runner.run()
     elif section == "csv-dump":
         runner = CSVDump(factory)
-        asyncio.run(runner.run())
+        runner.run()
     elif section == "table-dump":
         runner = TableDump(factory)
         runner.sync_run()

@@ -158,7 +158,7 @@ async def main():
     # for chunk in chunks(issuers, 10):
     #     await asyncio.gather(*[dump_nixer_offer(issuer) for issuer in chunk])
     #     time.sleep(60)
-    await dump_nixer_offers_for_all_issuers()
+    # await dump_nixer_offers_for_all_issuers()
     await dump_all_offer_details()
     await reformat_offer_details_dump()
 
