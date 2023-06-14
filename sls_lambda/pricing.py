@@ -26,16 +26,6 @@ class TaxonPriceDump(PricingLambdaRunner):
         super().__init__(factory)
         self._set_writer("taxon-price")
 
-    async def _get_taxon_offers(self, pool, taxon, issuer):  # noqa
-        async with pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    f"SELECT xrp_amount, is_sell_offer FROM nft_buy_sell_offers WHERE issuer = '{issuer}' AND taxon = '{taxon}' AND accept_offer_hash is null AND cancel_offer_hash is null"  # noqa
-                )
-                result = await cursor.fetchall()
-            connection.close()
-        return result
-
     async def _get_taxon_price_summary(self):
         pool = await self.db_client.create_db_pool()
         async with pool.acquire() as connection:
@@ -64,55 +54,6 @@ class TaxonPriceDump(PricingLambdaRunner):
         data = [{"issuer": issuer, "taxon": taxon, "volume": int(volume) if volume is not None else 0 } for (issuer, taxon, volume) in volumes]
         await self.writer.write_json(f"volume/{now.strftime('%Y-%m-%d-%H')}.json", data)
 
-    async def _dump_taxon_pricing(self, taxon, issuer, pool):
-        now = datetime.datetime.utcnow()
-        offers = await self._get_taxon_offers(pool, taxon, issuer)
-        buy_offers = [
-            float(offer[0])
-            for offer in offers
-            if offer[1] is False and float(offer[0]) != 0
-        ]
-        sell_offers = [
-            float(offer[0])
-            for offer in offers
-            if offer[1] is True and float(offer[0]) != 0
-        ]
-        highest_buy_offer = max(buy_offers) if buy_offers else 0
-        lowest_sell_offer = min(sell_offers) if sell_offers else 0
-        mid_price = highest_buy_offer + lowest_sell_offer / 2
-        data = {
-            "mid_price": mid_price,
-            "floor_price": lowest_sell_offer,
-        }
-        await self.writer.write_json(
-            f"{issuer}/{taxon}/{now.strftime('%Y-%m-%d-%H')}.json", data
-        )
-
-    async def _dump_issuer_taxons_pricing(self, issuer):  # noqa
-        issuers_df = self.factory.issuers_df
-        taxon = issuers_df[issuers_df["Issuer_Account"] == issuer].Taxon.to_list()
-        taxons = []
-        if str(taxon[0]) != "nan":
-            taxons = [int(taxon[0])]
-        else:
-            taxons = fetch_issuer_taxons(
-                issuer,
-                self.factory.config.ENVIRONMENT,
-                self.factory.config.NFT_DUMP_BUCKET,
-                self.factory.config.ACCESS_KEY_ID,
-                self.factory.config.SECRET_ACCESS_KEY,
-            )  # todo: refactor this
-        if len(taxons) > 100:
-            for chunk in chunks(taxons, 100):
-                pool = await self.db_client.create_db_pool()
-                await asyncio.gather(
-                    *[self._dump_taxon_pricing(taxn, issuer, pool) for taxn in chunk]
-                )
-        else:
-            pool = await self.db_client.create_db_pool()
-            await asyncio.gather(
-                *[self._dump_taxon_pricing(taxn, issuer, pool) for taxn in taxons]
-            )
 
     async def _dump_issuer_taxon_pricing(self, data):
         now = datetime.datetime.now()
@@ -137,7 +78,7 @@ class TaxonPriceDump(PricingLambdaRunner):
         await asyncio.gather(*[self._dump_issuer_taxon_pricing(data) for data in prices])
 
     def _run(self, issuer):
-        asyncio.run(self._dump_issuer_taxons_pricing(issuer))
+        pass
 
     def run(self) -> None:
         asyncio.run(self._dump_issuers_taxons_pricing())
