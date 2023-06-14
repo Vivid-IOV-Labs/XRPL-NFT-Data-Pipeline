@@ -4,7 +4,6 @@ import logging
 
 from billiard.pool import Pool
 
-from utilities import chunks, fetch_issuer_taxons
 
 from .base import BaseLambdaRunner
 

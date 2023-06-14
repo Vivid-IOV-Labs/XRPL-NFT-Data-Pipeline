@@ -29,4 +29,22 @@ This class creates two dumps. One for the pricing (mid_price and floor_price) an
 ```
 ## Python Code
 The code for this class can be found in [TaxonPriceDump](/sls_lambda/pricing.py) class.
+___
+# IssuerPriceDump
 
+This creates an hourly dump of `floor_price`, `mid_price` and `maximum_buy_offer` of all the projects owned by each tracked issuer on xrpl.
+The files are dumped to s3 bucket.
+
+## Output
+#### Location: `python-xls20-pricing/{hour}/{issuer}`
+#### Object
+```json
+{
+  "issuer": "tracked issuer",
+  "floor_price": "calculated floor price",
+  "max_buy_offer": "calculated maximum buy offer",
+  "mid_price": "calculated mid price"
+}
+```
+## Python Code
+The code for this class can be found in [IssuerPriceDump](/sls_lambda/pricing.py) class.
