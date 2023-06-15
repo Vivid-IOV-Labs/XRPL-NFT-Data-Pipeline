@@ -11,8 +11,8 @@ This class creates two dumps. One for the pricing (mid_price and floor_price) an
 #### Object
 ```json
 {
-  "floor_price": "calculated floor price",
-  "mid_price": "calculated mid price"
+  "floor_price": "float",
+  "mid_price": "float"
 }
 ```
 ### Volume Output
@@ -21,9 +21,9 @@ This class creates two dumps. One for the pricing (mid_price and floor_price) an
 ```json
 [
   {
-    "issuer": "project issuer",
-    "taxon": "project taxon", 
-    "volume": "calculated project volume"
+    "issuer": "string",
+    "taxon": "int", 
+    "volume": "float"
   }
 ]
 ```
@@ -40,10 +40,10 @@ The files are dumped to s3 bucket.
 #### Object
 ```json
 {
-  "issuer": "tracked issuer",
-  "floor_price": "calculated floor price",
-  "max_buy_offer": "calculated maximum buy offer",
-  "mid_price": "calculated mid price"
+  "issuer": "string",
+  "floor_price": "float",
+  "max_buy_offer": "float",
+  "mid_price": "float"
 }
 ```
 ## Python Code
