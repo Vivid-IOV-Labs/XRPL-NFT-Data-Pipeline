@@ -28,7 +28,7 @@ This class creates two dumps. One for the pricing (mid_price and floor_price) an
 ]
 ```
 ## Python Code
-The code for this class can be found in [TaxonPriceDump](/sls_lambda/pricing.py) class.
+The code for this class can be found in [TaxonPriceDump](/sls_lambda/pricing.py#L23) class.
 ___
 # IssuerPriceDump
 
@@ -47,4 +47,4 @@ The files are dumped to s3 bucket.
 }
 ```
 ## Python Code
-The code for this class can be found in [IssuerPriceDump](/sls_lambda/pricing.py) class.
+The code for this class can be found in [IssuerPriceDump](/sls_lambda/pricing.py#L85) class.
