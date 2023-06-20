@@ -135,7 +135,7 @@ class TableDump(BaseLambdaRunner):
             lambda x: x.to_json(), axis=1
         )
 
-        tweets_df = pd.read_csv("data/local/xls20/latest/tweets.csv")
+        tweets_df = pd.read_csv(f"s3://{config.DATA_DUMP_BUCKET}/xls20/latest/tweets.csv")
         tweets_df["twitter"] = tweets_df["user_name"]
 
         seven_days_ago = current_time - datetime.timedelta(days=7)

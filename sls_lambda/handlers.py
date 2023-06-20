@@ -1,10 +1,8 @@
 import asyncio
 import logging
 
-from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
-                        NFTokenDump, TableDump, TwitterDump)
-from sls_lambda.invokers import (invoke_graph_dump, invoke_table_dump,
-                                 invoke_twitter_dump)
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump)
+from sls_lambda.invokers import (invoke_graph_dump, invoke_table_dump)
 from utilities import factory
 
 logger = logging.getLogger("app_log")
@@ -32,22 +30,14 @@ def issuers_price_dump(event, context):
     asyncio.run(issuer_price_runner.run())
 
 
+async def after_csv_dump_invocation(config):
+    await asyncio.gather(*[invoke_table_dump(config), invoke_graph_dump(config)])
+
 def csv_dump(event, context):
     runner = CSVDump(factory)
     runner.run()
 
-    asyncio.run(invoke_graph_dump(factory.config))
-
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(
-        asyncio.gather(
-            *[
-                invoke_table_dump(factory.config),
-                invoke_graph_dump(factory.config),
-            ]
-        )
-    )
-
+    asyncio.run(after_csv_dump_invocation(factory.config))
 
 def table_dump(event, context):
     runner = TableDump(factory)
@@ -60,6 +50,6 @@ def graph_dump(event, context):
     runner.run()
 
 
-def twitter_dump(event, context):
-    runner = TwitterDump(factory)
-    runner.run()
+# def twitter_dump(event, context):
+#     runner = TwitterDump(factory)
+#     runner.run()

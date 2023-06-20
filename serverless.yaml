@@ -69,10 +69,10 @@ functions:
     handler: sls_lambda/handlers.graph_dump
     name: nft-graph-dump-${sls:stage}
     timeout: 900
-  nft-twitter-dump:
-    handler: sls_lambda/handlers.twitter_dump
-    name: nft-twitter-dump-${sls:stage}
-    timeout: 900
+#  nft-twitter-dump:
+#    handler: sls_lambda/handlers.twitter_dump
+#    name: nft-twitter-dump-${sls:stage}
+#    timeout: 900
 #
 #stepFunctions:
 #  stateMachines:
