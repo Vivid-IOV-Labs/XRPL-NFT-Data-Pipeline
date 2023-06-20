@@ -1,3 +1,5 @@
+include .env
+
 docker-start:
 	cp -r sls_lambda utilities dags
 	docker build . --tag pkt_afw_ext:latest
@@ -27,4 +29,7 @@ load-nixer:
 	mv psycopg2 psycopg2-new
 	python3.9 nixer-offer-loader.py
 	mv psycopg2-new psycopg2
+
+airflow-server:
+	ssh -i ${AIRFLOW_SERVER_ACCESS_KEY} ${AIRFLOW_SERVER}
 
