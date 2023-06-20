@@ -32,7 +32,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="NFT_PROJECT_PRICE_GRAPHS",
+    dag_id="TWITTER_DAILY_DUMPS",
     default_args=default_args,
     schedule_interval="@daily",
     description="This DAG is for twitter social activity dump of all the tracked xls20 nft issuer accounts.",
