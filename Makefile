@@ -8,7 +8,9 @@ docker-stop:
 	docker compose down -v
 
 deploy-dev:
+	mv psycopg2-2 psycopg2
 	sls deploy --stage dev
+	mv psycopg2 psycopg2-2
 
 trigger-setup:
 	mv psycopg2 psycopg2-new
