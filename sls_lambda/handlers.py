@@ -36,13 +36,14 @@ def csv_dump(event, context):
     runner = CSVDump(factory)
     runner.run()
 
-    loop = asyncio.get_event_loop()
+    asyncio.run(invoke_graph_dump(factory.config))
+
+    loop = asyncio.new_event_loop()
     loop.run_until_complete(
         asyncio.gather(
             *[
                 invoke_table_dump(factory.config),
                 invoke_graph_dump(factory.config),
-                invoke_twitter_dump(factory.config),
             ]
         )
     )
