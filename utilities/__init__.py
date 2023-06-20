@@ -8,5 +8,6 @@ from .utils import (cap1, chunks, execute_sql_file, fetch_dumped_taxon_prices,
                     get_s3_resource, get_weekly_df, read_df, read_json,
                     to_snake_case, twitter_pics, write_df)
 from .writers import AsyncS3FileWriter, BaseFileWriter, LocalFileWriter
+from .twitter import TwitterClient
 
 factory = Factory(Config)
