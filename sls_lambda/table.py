@@ -5,7 +5,7 @@ from io import BytesIO, StringIO
 import numpy as np
 import pandas as pd
 
-from utilities import get_last_n_tweets, to_snake_case, twitter_pics, write_df
+from utilities import to_snake_case, twitter_pics
 
 from .base import BaseLambdaRunner
 
@@ -21,24 +21,16 @@ class TableDump(BaseLambdaRunner):
         # Dump Collections Profile
         issuers_df = self.factory.issuers_df
         config = self.factory.config
-
-        write_df(
-            issuers_df,
-            f"xls20/latest/NFT_Collections_Profile.json",
-            "json",
-            bucket=config.DATA_DUMP_BUCKET,
-        )
+        await self.writer.write_df(issuers_df, "xls20/latest/NFT_Collections_Profile.json", "json")
 
         current_time = datetime.datetime.utcnow()
-        # day_ago = current_time - datetime.timedelta(days=1)
-        current = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
+        current = current_time.strftime("%Y-%m-%d-%H")
         previous = (
             datetime.datetime.strptime(current, "%Y-%m-%d-%H")
             - datetime.timedelta(days=1)
         ).strftime("%Y-%m-%d-%H")
         df_current = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{current}.csv")
         df_current.columns = [to_snake_case(x) for x in df_current.columns]
-        # df_current = df_current[df_current["twitter"].notna()]
         df_current["name"] = df_current["name"].str.strip()
 
         df_current["total_supply"] = df_current["supply"]
@@ -143,55 +135,27 @@ class TableDump(BaseLambdaRunner):
             lambda x: x.to_json(), axis=1
         )
 
-        tweets_list = []
-        tweets_list_previous = []
-        twitter_list = df.twitter.unique()
-        api_key = config.TWITTER_API_KEY
-        api_secret = config.TWITTER_API_SECRET
-        for name in twitter_list:
-            if type(name) == float:
-                continue
-            tweets = []
-            try:
-                tweets = get_last_n_tweets(name, api_key, api_secret)
-            except Exception as e:
-                logger.error(e)
-                continue
-            for tweet in tweets:
-                diff = (
-                    current_time - tweet.created_at.replace(tzinfo=None)
-                ).total_seconds()
-                if diff < 0:
-                    continue
-                if diff >= 3600 * 24 * 8:
-                    break
-                if diff < 3600 * 24 * 7:
-                    tweets_list.append(
-                        [name, 1, tweet.retweet_count, tweet.favorite_count]
-                    )
-                if diff >= 3600 * 24 * 1 and diff < 3600 * 24 * 8:  # noqa
-                    tweets_list_previous.append(
-                        [name, 1, tweet.retweet_count, tweet.favorite_count]
-                    )
+        tweets_df = pd.read_csv("data/local/xls20/latest/tweets.csv")
+        tweets_df["twitter"] = tweets_df["user_name"]
 
-        tweets = pd.DataFrame(
-            tweets_list, columns=["twitter", "tweets", "retweets", "likes"]
-        )
-        sum = tweets.groupby("twitter").sum().reset_index(level=0)  # noqa
+        seven_days_ago = current_time - datetime.timedelta(days=7)
+        one_day_ago = current_time - datetime.timedelta(days=1)
+        eight_days_ago = current_time - datetime.timedelta(days=8)
+        tweets_current = tweets_df[["twitter", "tweets", "retweets", "likes"]].loc[
+            (tweets_df["timestamp"] <= current_time.timestamp()) &
+            (tweets_df["timestamp"] >= seven_days_ago.timestamp())
+        ] # 7 days back
+        tweets_previous = tweets_df[["twitter", "tweets", "retweets", "likes"]].loc[
+            (tweets_df["timestamp"] <= one_day_ago.timestamp()) &
+            (tweets_df["timestamp"] >= eight_days_ago.timestamp())
+        ] # 7 days back starting from the previous day
+        tweets_previous.columns = ["twitter", "tweets_previous", "retweets_previous", "likes_previous"]
 
-        tweets_previous = pd.DataFrame(
-            tweets_list,
-            columns=[
-                "twitter",
-                "tweets_previous",
-                "retweets_previous",
-                "likes_previous",
-            ],
-        )
+        sum = tweets_current.groupby("twitter").sum().reset_index(level=0)  # noqa
         sum_previous = tweets_previous.groupby("twitter").sum().reset_index(level=0)
+
         df = pd.merge(df, sum, on="twitter", how="outer")
         df = pd.merge(df, sum_previous, on="twitter", how="outer")
-        df["re_tweets"] = df["retweets"]
 
         df["value"] = (
             (df["tweets"] + df["retweets"] + df["likes"]).fillna(0.0).astype(int)
@@ -210,6 +174,7 @@ class TableDump(BaseLambdaRunner):
             ["value", "percentage", "direction_of_change"]
         ].apply(lambda x: x.to_json(), axis=1)
         df["price_xrp"] = df["pricexrp"]
+        df["re_tweets"] = df["retweets"]
         output = df[
             [
                 "id",
@@ -248,5 +213,4 @@ class TableDump(BaseLambdaRunner):
 
     def sync_run(self):
         import asyncio
-
         asyncio.run(self.run())
