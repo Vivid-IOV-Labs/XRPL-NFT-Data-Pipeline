@@ -27,6 +27,8 @@ class BaseFileWriter(metaclass=ABCMeta):
         buffer = BytesIO()
         if file_type == "csv":
             df.to_csv(buffer, index=False)
+        elif file_type == "json":
+            df.to_json(buffer, indent=4, orient="records")
         await self._write(path, buffer)
 
     async def write_buffer(self, path, buffer):
@@ -47,12 +49,19 @@ class LocalFileWriter(BaseFileWriter):
         if not os.path.exists(path):
             os.makedirs(path)
 
+    def _get_dir_from_file_path(self, file_path):  # noqa
+        return "/".join(file_path.split("/")[:-1])
+
+
     async def _write(self, path, buffer):
-        path = f"{self.base_dir}/{path}"
+        file_path = f"{self.base_dir}/{path}"
+        file_dir = self._get_dir_from_file_path(file_path)
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
         content = buffer.getvalue()
-        with open(path, "wb") as file:
+        with open(file_path, "wb") as file:
             file.write(content)
-        logger.info(f"File writen to {path}")
+        logger.info(f"File writen to {file_path}")
 
 
 class AsyncS3FileWriter(BaseFileWriter):
