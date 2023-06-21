@@ -84,6 +84,7 @@ class TwitterDump(BaseLambdaRunner):
         df["Name"] = df["Name"].str.strip()
 
         tweets_df = self._get_tweets_df(df.Twitter.unique())
+        # tweets_df = pd.read_csv(f"s3://{config.DATA_DUMP_BUCKET}/xls20/latest/tweets.csv")
         # write this to s3 bucket
         await self._write_tweets_df_to_storage(tweets_df)
 
@@ -94,12 +95,10 @@ class TwitterDump(BaseLambdaRunner):
             pct_buffer = BytesIO()
             pct_buffer.write(pct)
 
-            await asyncio.gather(*[
-                self.writer.write_df(df, f"xls20/latest/{col.title()}_Graph.json", "json"),
-                self.writer.write_df(df, f"xls20/history/{int(latest_unix)}/{col.title()}_Graph.json", "json"),
-                self.writer.write_buffer(f"xls20/history/{int(latest_unix)}/{col.title()}_Percentage_Change.json", pct_buffer),
-                self.writer.write_buffer(f"xls20/latest/{col.title()}_Percentage_Change.json", pct_buffer)
-            ])
+            await self.writer.write_df(df, f"xls20/latest/{col.title()}_Graph.json", "json")
+            await self.writer.write_df(df, f"xls20/history/{int(latest_unix)}/{col.title()}_Graph.json", "json")
+            await self.writer.write_buffer(f"xls20/latest/{col.title()}_Percentage_Change.json", pct_buffer)
+            await self.writer.write_buffer(f"xls20/history/{int(latest_unix)}/{col.title()}_Percentage_Change.json", pct_buffer)
 
     def run(self) -> None:
         asyncio.run(self._run())
