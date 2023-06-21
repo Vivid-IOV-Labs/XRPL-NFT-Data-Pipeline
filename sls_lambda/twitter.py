@@ -75,9 +75,10 @@ class TwitterDump(BaseLambdaRunner):
         current = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
         latest_date = file_to_time(current)
         latest_unix = latest_date.timestamp()
+        an_hour_ago = (latest_date - datetime.timedelta(hours=1)).strftime("%Y-%m-%d-%H")
         dump_col = ["tweets", "retweets", "likes", "social_activity"]
 
-        df = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{current}.csv")
+        df = pd.read_csv(f"s3://{config.RAW_DUMP_BUCKET}/{an_hour_ago}.csv")
         df.columns = [cap1(x) for x in df.columns]
         df = df[df["Twitter"].notna()]
         df["Name"] = df["Name"].str.strip()
