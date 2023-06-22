@@ -39,6 +39,18 @@ async def xrp_amount_update():
         await execute_sql_file(connection, "sql/xrp_amount_update.sql")
         connection.close()
 
+async def nft_burn_offer_trigger_setup():
+    db_client = factory.get_db_client()
+    db_client.config.PROXY_CONN_INFO[
+        "host"
+    ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"
+
+    pool = await db_client.create_db_pool()
+    async with pool.acquire() as connection:
+        await execute_sql_file(connection, "sql/price_summary_update.sql")
+        await execute_sql_file(connection, "sql/burn_offer_trigger.sql")
+        connection.close()
+
 if __name__ == "__main__":
     args = sys.argv
     if args[1] == "price-trigger":
@@ -47,3 +59,5 @@ if __name__ == "__main__":
         asyncio.run(volume_trigger_setup())
     elif args[1] == "amount-update":
         asyncio.run(xrp_amount_update())
+    elif args[1] == "burn-offer-trigger":
+        asyncio.run(nft_burn_offer_trigger_setup())
