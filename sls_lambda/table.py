@@ -48,7 +48,6 @@ class TableDump(BaseLambdaRunner):
             how="outer",
             suffixes=("", "_previous"),
         )
-
         df["promoted"] = "false"
 
         df["id"] = df.index + 1
@@ -154,8 +153,11 @@ class TableDump(BaseLambdaRunner):
         sum = tweets_current.groupby("twitter").sum().reset_index(level=0)  # noqa
         sum_previous = tweets_previous.groupby("twitter").sum().reset_index(level=0)
 
-        df = pd.merge(df, sum, on="twitter", how="outer")
-        df = pd.merge(df, sum_previous, on="twitter", how="outer")
+        df["twitter_new"] = df["twitter"].str.lower()
+        sum["twitter_new"] = sum["twitter"].str.lower()
+        sum_previous["twitter_new"] = sum_previous["twitter"].str.lower()
+        df = pd.merge(df, sum, on="twitter_new", how="outer")
+        df = pd.merge(df, sum_previous, on="twitter_new", how="outer")
 
         df["value"] = (
             (df["tweets"] + df["retweets"] + df["likes"]).fillna(0.0).astype(int)
