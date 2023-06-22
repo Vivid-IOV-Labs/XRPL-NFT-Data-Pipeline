@@ -93,7 +93,7 @@ class IssuerPriceDump(PricingLambdaRunner):
             async with connection.cursor() as cursor:
                 issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
                 await cursor.execute(
-                    f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE issuer IN ({issuers_str}) GROUP BY issuer;"
+                    f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer;"
                 )
                 result = await cursor.fetchall()
             connection.close()
