@@ -15,6 +15,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drops the Trigger If it already exists --
+DROP TRIGGER IF EXISTS after_insert_nft_burn_offer ON nft_burn_offer;
+
 CREATE TRIGGER after_insert_nft_burn_offer
 AFTER INSERT ON nft_burn_offer
 FOR EACH ROW
