@@ -41,7 +41,7 @@ class TaxonPriceDump(PricingLambdaRunner):
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary GROUP BY issuer, taxon"  # noqa
+                    f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary WHERE burn_offer_hash is NULL GROUP BY issuer, taxon"  # noqa
                 )
                 result = await cursor.fetchall()
             connection.close()
