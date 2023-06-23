@@ -70,8 +70,8 @@ async def volume_summary_burn_offer_update():
 
     pool = await db_client.create_db_pool()
     async with pool.acquire() as connection:
-        await execute_sql_file(connection, "sql/volume_summary_table_update.sql")
-        await execute_sql_file(connection, "sql/update_volume_summary_burn_offer_hash.sql")
+        # await execute_sql_file(connection, "sql/volume_summary_table_update.sql")
+        # await execute_sql_file(connection, "sql/update_volume_summary_burn_offer_hash.sql")
         await execute_sql_file(connection, "sql/burn_offer_trigger.sql")
         connection.close()
 
