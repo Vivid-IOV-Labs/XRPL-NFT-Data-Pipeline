@@ -62,6 +62,19 @@ async def pricing_summary_burn_offer_update():
         await execute_sql_file(connection, "sql/update_price_summary_burn_offer.sql")
         connection.close()
 
+async def volume_summary_burn_offer_update():
+    db_client = factory.get_db_client()
+    db_client.config.PROXY_CONN_INFO[
+        "host"
+    ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"
+
+    pool = await db_client.create_db_pool()
+    async with pool.acquire() as connection:
+        await execute_sql_file(connection, "sql/volume_summary_table_update.sql")
+        await execute_sql_file(connection, "sql/update_volume_summary_burn_offer_hash.sql")
+        await execute_sql_file(connection, "sql/burn_offer_trigger.sql")
+        connection.close()
+
 if __name__ == "__main__":
     args = sys.argv
     if args[1] == "price-trigger":

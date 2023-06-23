@@ -6,6 +6,11 @@ BEGIN
     SET burn_offer_hash = NEW.hash
     WHERE nft_token_id = NEW.nft_token_id;
 
+    -- Update the burn_offer_hash in nft_volume_summary if the nft_token_id exists
+    UPDATE nft_volume_summary
+    SET burn_offer_hash = NEW.hash
+    WHERE nft_token_id = NEW.nft_token_id;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
