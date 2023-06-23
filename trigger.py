@@ -87,3 +87,5 @@ if __name__ == "__main__":
         asyncio.run(nft_burn_offer_trigger_setup())
     elif args[1] == "price-summary-burn-offer-update":
         asyncio.run(pricing_summary_burn_offer_update())
+    elif args[1] == "volume-summary-burn-offer-update":
+        asyncio.run(volume_summary_burn_offer_update())
