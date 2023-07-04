@@ -53,15 +53,41 @@ async def update_xrp_amount(offer_index, amount, currency, price_dict):
             connection.close()
             print(f"Update Price For Offer Index: {offer_index} with Amount: {amount} And XRP: {to_droplets}")
 
+async def fetch_nft_projects():
+    db_client = factory.get_db_client()
+    # db_client.config.PROXY_CONN_INFO[
+    #     "host"
+    # ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"
+    print("pool creating")
+    pool = await db_client.create_db_pool()
+    print("pool created")
+    async with pool.acquire() as connection:
+        async with connection.cursor() as cursor:
+            await cursor.execute(
+                f"SELECT nft_token_id, issuer, uri, taxon FROM project_tracker WHERE taxon is not NULL"  # noqa
+            )
+            print("here")
+            result = await cursor.fetchall()
+            print("stopped")
+            connection.close()
+            return result
+
 async def run():
-    null_offers = await fetch_null_offers()
-    issuer_currencies = set([(data[0], data[1]) for data in null_offers])
-    currency_prices = {}
-    for pair in issuer_currencies:
-        data = await convert_to_xrp(pair[1], pair[0])
-        currency_prices[pair[1]] = data
-    for chunk in chunks(null_offers, 100):
-        await asyncio.gather(*[update_xrp_amount(offer_index, amount, currency, currency_prices) for (issuer, currency, amount, offer_index) in chunk])
+    import json
+    print("start")
+    result = await fetch_nft_projects()
+    to_dump = [{"token_id": res[0], "issuer": res[1], "uri": res[2], "taxon": res[3]} for res in result]
+
+    json.d
+    __import__("ipdb").set_trace()
+    # null_offers = await fetch_null_offers()
+    # issuer_currencies = set([(data[0], data[1]) for data in null_offers])
+    # currency_prices = {}
+    # for pair in issuer_currencies:
+    #     data = await convert_to_xrp(pair[1], pair[0])
+    #     currency_prices[pair[1]] = data
+    # for chunk in chunks(null_offers, 100):
+    #     await asyncio.gather(*[update_xrp_amount(offer_index, amount, currency, currency_prices) for (issuer, currency, amount, offer_index) in chunk])
 
 if __name__ == "__main__":
     asyncio.run(run())
