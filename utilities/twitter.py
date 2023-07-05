@@ -31,7 +31,7 @@ class TwitterClient:
     def get_users_by_username(self, user_names: list):
         headers = self._construct_headers()
         username_param = ",".join(user_names)
-        response = requests.get(f"{self._base_url}/2/users/by?usernames={username_param}", headers=headers)
+        response = requests.get(f"{self._base_url}/2/users/by?usernames={username_param}&user.fields=profile_image_url", headers=headers)
         return response.json()["data"]
 
     def get_user_timeline(self, user_id: int, start: str, end: str):

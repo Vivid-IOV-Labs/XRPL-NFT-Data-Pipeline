@@ -52,11 +52,6 @@ class TableDump(BaseLambdaRunner):
 
         df["id"] = df.index + 1
         df = df[df["name"].notna()]
-        df["logo_url"], df["banner_url"] = zip(*df["twitter"].apply(twitter_pics))
-
-        df["project"] = df[
-            ["issuer", "logo_url", "banner_url", "name", "promoted"]
-        ].apply(lambda x: x.to_json(), axis=1)
 
         df[
             [
@@ -135,7 +130,9 @@ class TableDump(BaseLambdaRunner):
         )
 
         tweets_df = pd.read_csv(f"s3://{config.DATA_DUMP_BUCKET}/xls20/latest/tweets.csv")
+        # tweets_df = pd.read_csv("data/local/xls20/latest/tweets.csv")
         tweets_df["twitter"] = tweets_df["user_name"]
+        profile_img_df = tweets_df[["twitter", "profile_image_url"]].drop_duplicates()
 
         seven_days_ago = current_time - datetime.timedelta(days=7)
         one_day_ago = current_time - datetime.timedelta(days=1)
@@ -156,8 +153,10 @@ class TableDump(BaseLambdaRunner):
         df["twitter_new"] = df["twitter"].str.lower()
         sum["twitter_new"] = sum["twitter"].str.lower()
         sum_previous["twitter_new"] = sum_previous["twitter"].str.lower()
+        profile_img_df["twitter_new"] = profile_img_df["twitter"].str.lower()
         df = pd.merge(df, sum, on="twitter_new", how="outer")
         df = pd.merge(df, sum_previous, on="twitter_new", how="outer")
+        df = pd.merge(df, profile_img_df, on="twitter_new", how="outer")
 
         df["value"] = (
             (df["tweets"] + df["retweets"] + df["likes"]).fillna(0.0).astype(int)
@@ -177,6 +176,11 @@ class TableDump(BaseLambdaRunner):
         ].apply(lambda x: x.to_json(), axis=1)
         df["price_xrp"] = df["pricexrp"]
         df["re_tweets"] = df["retweets"]
+        df["logo_url"], df["banner_url"] = zip(*df["profile_image_url"].apply(twitter_pics))
+
+        df["project"] = df[
+            ["issuer", "logo_url", "banner_url", "name", "promoted"]
+        ].apply(lambda x: x.to_json(), axis=1)
         output = df[
             [
                 "id",

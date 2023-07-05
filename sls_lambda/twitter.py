@@ -28,7 +28,7 @@ class TwitterDump(BaseLambdaRunner):
         """
         twitter_users = self.twitter_client.get_users_by_username(user_name_list)
         tweets_list = []
-        columns = ["timestamp", "user_name", "tweets", "retweets", "likes", "social_activity"]
+        columns = ["timestamp", "user_name", "tweets", "retweets", "likes", "social_activity", "profile_image_url"]
         # Twitter Allows 10 requests every 15 minutes
         completed = 0
         for twitter_user_chunk in chunks(twitter_users, 5):
@@ -42,7 +42,8 @@ class TwitterDump(BaseLambdaRunner):
                         user["username"], 1,
                         retweet_count,
                         like_count,
-                        1 + retweet_count + like_count
+                        1 + retweet_count + like_count,
+                        user["profile_image_url"]
                     ])
             completed += len(twitter_user_chunk)
             if completed == len(twitter_users):

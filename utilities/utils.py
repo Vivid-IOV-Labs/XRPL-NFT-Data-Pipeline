@@ -98,12 +98,11 @@ def to_snake_case(col: str):
     return "_".join([x.lower() for x in col.split("_")])
 
 
-def twitter_pics(name):
+def twitter_pics(prof_img):
     try:
-        pic = twitter_scrapper.TwitterUserScraper(name)._get_entity()  # noqa
         return (
-            pic.profileImageUrl.replace("normal", "400x400"),
-            pic.profileBannerUrl + "/1500x500",
+            prof_img.replace("normal", "400x400"),
+            prof_img.replace("normal", "1500x500"),
         )
     except Exception as e:
         print(e)
