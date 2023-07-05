@@ -1,31 +1,46 @@
+import datetime
+import pandas as pd
+import os
+
 import pytest
-import time
-from sls_lambda import NFTokenPriceDump, IssuerPriceDump, NFTaxonDump, NFTokenDump
-from utilities import factory
 
+from sls_lambda import CSVDump
 
-def test_token_price_dump():
-    start = time.time()
-    runner = NFTokenPriceDump(factory)
+def test_csv_dump(setup):
+    factory = setup["factory"]
+    cwd = setup["cwd"]
+    last_hour = setup["last_hour"]
+
+    runner = CSVDump(factory)
     runner.run()
-    print(f"Executed in {time.time() - start}")
 
-def test_issuer_price_dump():
-    start = time.time()
-    runner = IssuerPriceDump(factory)
-    runner.run()
-    print(f"Executed in {time.time() - start}")
-
-@pytest.mark.asyncio
-async def test_token_dumps():
-    start = time.time()
-    token_dump_runner = NFTokenDump(factory)
-    await token_dump_runner.run()
-    print(f"Executed in {time.time() - start}")
-
-@pytest.mark.asyncio
-async def test_taxon_dumps():
-    start = time.time()
-    taxon_dump_runner = NFTaxonDump(factory)
-    await taxon_dump_runner.run()
-    print(f"Executed in {time.time() - start}")
+    csv_df = pd.read_csv(f"{cwd}/data/test/{last_hour}.csv")
+    price_df = pd.read_csv(f"{cwd}/data/test/{last_hour}_price.csv")
+    expected_csv_columns = [
+        "ISSUER",
+        "NAME",
+        "WEBSITE",
+        "TWITTER",
+        "PRICEXRP",
+        "FLOOR_PRICE_XRP",
+        "MID_PRICE_XRP",
+        "MAX_BUY_OFFER_XRP",
+        "VOLUME",
+        "SUPPLY",
+        "CIRCULATION",
+        "HOLDER_COUNT",
+        "TOKENS_HELD",
+        "MARKET_CAP",
+        "HELD_0",
+    ]
+    expected_price_columns = [
+        "ISSUER",
+        "FLOOR_PRICE_XRP",
+        "MAX_BUY_OFFER_XRP",
+        "MID_PRICE_XRP",
+        "PRICEXRP"
+    ]
+    assert all(column in csv_df.columns for column in expected_csv_columns)
+    assert all(column in price_df.columns for column in expected_price_columns)
+    assert len(csv_df) == len(factory.supported_issuers)
+    assert len(price_df) == len(factory.supported_issuers)

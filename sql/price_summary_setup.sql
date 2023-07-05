@@ -1,7 +1,7 @@
 -- Create Price Summary Table --
 CREATE TABLE IF NOT EXISTS nft_pricing_summary
 (
-	nft_token_id text COLLATE pg_catalog."default",
+	nft_token_id text COLLATE pg_catalog."default" UNIQUE,
 	floor_price text COLLATE pg_catalog."default",
 	max_buy_offer text COLLATE pg_catalog."default",
 	issuer text COLLATE pg_catalog."default",
@@ -10,10 +10,10 @@ CREATE TABLE IF NOT EXISTS nft_pricing_summary
 
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.nft_buy_sell_offers
-    OWNER to postgres;
+-- ALTER TABLE IF EXISTS public.nft_buy_sell_offers
+--     OWNER to postgres;
 
-ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
+-- ALTER TABLE IF EXISTS nft_pricing_summary ADD UNIQUE (nft_token_id);
 
 -- Drops the Trigger If it already exists --
 DROP TRIGGER IF EXISTS price_summary_update_trigger ON nft_buy_sell_offers;
@@ -24,10 +24,10 @@ RETURNS TRIGGER AS $$
 BEGIN
   UPDATE nft_pricing_summary
   SET floor_price = (
-    SELECT MIN(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND currency = '' AND amount::DECIMAL != 0
+    SELECT MIN(xrp_amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND is_sell_offer AND xrp_amount::DECIMAL != 0 AND accept_offer_hash is null AND cancel_offer_hash is null
   ),
   max_buy_offer = (
-    SELECT MAX(amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND currency = ''
+    SELECT MAX(xrp_amount) FROM nft_buy_sell_offers WHERE nft_token_id = NEW.nft_token_id AND NOT is_sell_offer AND accept_offer_hash is null AND cancel_offer_hash is null
   )
   WHERE nft_token_id = NEW.nft_token_id;
 
@@ -42,6 +42,6 @@ $$ LANGUAGE plpgsql;
 
 -- Creates the Trigger --
 CREATE TRIGGER price_summary_update_trigger
-AFTER INSERT ON nft_buy_sell_offers
+AFTER INSERT OR UPDATE ON nft_buy_sell_offers
 FOR EACH ROW
 EXECUTE FUNCTION update_token_price_summary();

@@ -1,7 +1,7 @@
 import datetime
-from typing import List
 import json
 from io import StringIO
+from typing import List
 
 import aioboto3
 import boto3
@@ -63,6 +63,7 @@ def fetch_dumped_token_prices(issuer, config):
         for obj in my_bucket.objects.filter(Prefix=f"{last_hour}/{issuer}/tokens/")
     ]
 
+
 def fetch_dumped_taxon_prices(issuer, config):
     last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
     s3 = boto3.resource(
@@ -86,7 +87,7 @@ async def read_json(bucket, key, config):
         try:
             res = await s3.get_object(Bucket=bucket, Key=key)
         except Exception as e:
-            print(e)
+            print(f"Error Reading JSON @ {key} in bucket: {bucket}\nError: {e}")
             return None
         body = res["Body"]
         data = await body.read()
@@ -97,12 +98,11 @@ def to_snake_case(col: str):
     return "_".join([x.lower() for x in col.split("_")])
 
 
-def twitter_pics(name):
+def twitter_pics(prof_img):
     try:
-        pic = twitter_scrapper.TwitterUserScraper(name)._get_entity()  # noqa
         return (
-            pic.profileImageUrl.replace("normal", "400x400"),
-            pic.profileBannerUrl + "/1500x500",
+            prof_img.replace("normal", "400x400"),
+            prof_img.replace("normal", "1500x500"),
         )
     except Exception as e:
         print(e)
@@ -226,8 +226,9 @@ def get_last_n_tweets(user_name, api_key, secret_key, n=100):
     tweets = api.user_timeline(screen_name=user_name, count=n)
     return tweets
 
+
 async def execute_sql_file(conn, sql_file):
-    with open(sql_file, 'r') as f:
+    with open(sql_file, "r") as f:
         sql = f.read()
     async with conn.cursor() as cur:
         result = await cur.execute(sql)

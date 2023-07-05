@@ -1,9 +1,9 @@
-from abc import ABCMeta, abstractmethod
 import json
 import logging
 import os.path
-from typing import Dict
+from abc import ABCMeta, abstractmethod
 from io import BytesIO
+from typing import Dict, Union, List
 
 import aioboto3
 
@@ -17,7 +17,7 @@ class BaseFileWriter(metaclass=ABCMeta):
     async def _write(self, path: str, buffer: BytesIO) -> None:
         raise NotImplementedError
 
-    async def write_json(self, path: str, data: Dict) -> None:
+    async def write_json(self, path: str, data: Union[Dict, List]) -> None:
         to_bytes = json.dumps(data, indent=4).encode("utf-8")
         buffer = BytesIO()
         buffer.write(to_bytes)
@@ -27,6 +27,8 @@ class BaseFileWriter(metaclass=ABCMeta):
         buffer = BytesIO()
         if file_type == "csv":
             df.to_csv(buffer, index=False)
+        elif file_type == "json":
+            df.to_json(buffer, indent=4, orient="records")
         await self._write(path, buffer)
 
     async def write_buffer(self, path, buffer):
@@ -34,18 +36,32 @@ class BaseFileWriter(metaclass=ABCMeta):
 
 
 class LocalFileWriter(BaseFileWriter):
+
+    def __init__(self, testing=False):
+        if testing:
+            self.base_dir = "data/test"
+        else:
+            self.base_dir = "data/local"
+        if not os.path.exists(self.base_dir):
+            os.makedirs(self.base_dir)
+
     def _create_path(self, path):  # noqa
         if not os.path.exists(path):
             os.makedirs(path)
 
+    def _get_dir_from_file_path(self, file_path):  # noqa
+        return "/".join(file_path.split("/")[:-1])
+
+
     async def _write(self, path, buffer):
-        path = f"data/{path}"
-        directory_path = "/".join(path.split("/")[:-1])
-        self._create_path(directory_path)
+        file_path = f"{self.base_dir}/{path}"
+        file_dir = self._get_dir_from_file_path(file_path)
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
         content = buffer.getvalue()
-        with open(path, "wb") as file:
+        with open(file_path, "wb") as file:
             file.write(content)
-        logger.info(f"File writen to {path}")
+        logger.info(f"File writen to {file_path}")
 
 
 class AsyncS3FileWriter(BaseFileWriter):

@@ -1,11 +1,12 @@
 import asyncio
+import logging
 import sys
 import time
 from multiprocessing import Process
-import logging
-from sls_lambda import NFTokenPriceDump, NFTokenDump, IssuerPriceDump, NFTaxonDump, CSVDump, TableDump, TwitterDump, GraphDumps
-from utilities import factory
 
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
+                        NFTokenDump, TaxonPriceGraph, TableDump, TwitterDump, TaxonPriceDump)
+from utilities import factory
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -16,6 +17,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
+
 if __name__ == "__main__":
     section = sys.argv[1]
     start = time.time()
@@ -25,21 +27,24 @@ if __name__ == "__main__":
     elif section == "taxon-dump":
         runner = NFTaxonDump(factory)
         asyncio.run(runner.run())
-    elif section == "taxon-pricing":
-        runner = NFTokenPriceDump(factory)
-        runner.run()
     elif section == "issuer-pricing":
         runner = IssuerPriceDump(factory)
+        asyncio.run(runner.run())
+    elif section == "taxon-pricing":
+        runner = TaxonPriceDump(factory)
         runner.run()
     elif section == "csv-dump":
         runner = CSVDump(factory)
-        asyncio.run(runner.run())
+        runner.run()
     elif section == "table-dump":
         runner = TableDump(factory)
         runner.sync_run()
     elif section == "graph-dump":
         runner = GraphDumps(factory)
         runner.run()
+    elif section == "taxon-price-graph":
+        runner = TaxonPriceGraph(factory)
+        asyncio.run(runner.run())
     elif section == "twitter-dump":
         runner = TwitterDump(factory)
         runner.run()
@@ -58,5 +63,7 @@ if __name__ == "__main__":
         p2.join()
         p3.join()
     else:
-        logger.info("Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing`")
+        logger.info(
+            "Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`"
+        )
     logger.info(f"Executed in {time.time() - start}")

@@ -37,7 +37,7 @@ class NFTokenDump(BaseLambdaRunner):
         data = await self._fetch_nfts(issuer)
         path = f"{now.strftime('%Y-%m-%d-%H')}/{issuer}.json"
         await self.writer.write_json(path, data)
-        return {
+        return_data = {
             "issuer": issuer,
             "supply": len(data["nfts"]),
             "circulation": len(
@@ -47,7 +47,10 @@ class NFTokenDump(BaseLambdaRunner):
                     if token["Owner"].lower() != issuer.lower()
                 ]
             ),
+            "holders": len({token["Owner"] for token in data["nfts"]})
         }
+        return_data["tokens_held"] = return_data["supply"] - return_data["circulation"]
+        return return_data
 
     async def run(self):
         supported_issuers = self.factory.supported_issuers

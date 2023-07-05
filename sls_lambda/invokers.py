@@ -1,10 +1,11 @@
-import boto3
-import aioboto3
-import botocore
 import logging
 
+import aioboto3
+import boto3
+import botocore
 
 logger = logging.getLogger("app_log")
+
 
 def invoke_csv_dump(config):
     lambda_client = boto3.client(
@@ -18,6 +19,7 @@ def invoke_csv_dump(config):
         InvocationType="Event",
     )
     logger.info(resp)
+
 
 async def invoke_token_dumps(config):
     logger.info("Invoking Token Dumps")
@@ -33,6 +35,7 @@ async def invoke_token_dumps(config):
             InvocationType="RequestResponse",
         )
 
+
 async def invoke_taxon_dumps(config):
     logger.info("Invoking Taxon Dumps")
     session = aioboto3.Session(  # noqa
@@ -46,6 +49,7 @@ async def invoke_taxon_dumps(config):
             FunctionName=f"issuers-taxon-dump-{config.STAGE}",
             InvocationType="RequestResponse",
         )
+
 
 async def invoke_table_dump(config):
     session = aioboto3.Session(  # noqa
@@ -87,6 +91,7 @@ async def invoke_twitter_dump(config):
             FunctionName=f"nft-twitter-dump-{config.STAGE}",
             InvocationType="Event",
         )
+
 
 # async def invoke_token_pricing_dump(issuer):
 #     session = aioboto3.Session(  # noqa
