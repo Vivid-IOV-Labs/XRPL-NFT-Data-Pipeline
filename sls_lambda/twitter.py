@@ -31,7 +31,7 @@ class TwitterDump(BaseLambdaRunner):
         columns = ["timestamp", "user_name", "tweets", "retweets", "likes", "social_activity", "profile_image_url"]
         # Twitter Allows 10 requests every 15 minutes
         completed = 0
-        for twitter_user_chunk in chunks(twitter_users, 5):
+        for twitter_user_chunk in chunks(twitter_users, 10):
             for user in twitter_user_chunk:
                 tweets = self.twitter_client.get_user_timeline_n_days_ago(int(user["id"]), 8)
                 for tweet in tweets:

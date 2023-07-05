@@ -15,9 +15,6 @@ deploy-dev:
 	mv psycopg2 psycopg2-2
 
 trigger-setup:
-<<<<<<< HEAD
-	python3.9 trigger.py
-=======
 	mv psycopg2 psycopg2-new
 	python3.9 trigger.py price-trigger
 	python3.9 trigger.py volume-trigger
@@ -27,7 +24,6 @@ amount-update:
 	mv psycopg2 psycopg2-new
 	python3.9 amount_update.py
 	mv psycopg2-new psycopg2
->>>>>>> c258adb1d7180fe05a60c45f9fdc80e561db8b89
 
 load-nixer:
 	mv psycopg2 psycopg2-new
