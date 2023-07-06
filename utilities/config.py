@@ -21,6 +21,7 @@ class Config:
     DATA_DUMP_BUCKET = os.getenv("DATA_DUMP_BUCKET", "test-data-dumps")
     TWITTER_API_KEY = os.getenv("TWITTER_API_KEY", "W7ELEojTfblc304cq99tJbDGl")
     TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "2NWrwduhunhfbSqF2c7Es5e9bBW5fwN0zjGOXbYPdqjaDqsKc4")
+    TAXON_PRICE_DUMP_BUCKET = os.getenv("TAXON_PRICE_DUMP_BUCKET")
     STAGE = os.getenv("STAGE", "sql-migrate")
     DB_BASE_CONN_INFO = {
         "port": os.getenv("RDS_PORT", "5432"),
