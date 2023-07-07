@@ -46,8 +46,13 @@ class Factory:
             return LocalFileWriter(testing=True)
         return AsyncS3FileWriter(self._get_bucket(section))
 
-    def get_db_client(self) -> DataBaseClient:
-        return DataBaseClient(self._config)
+    def get_db_client(self, write_proxy=False) -> DataBaseClient:
+        client = DataBaseClient(self._config)
+        if write_proxy is True:
+            client.config.PROXY_CONN_INFO[
+                "host"
+            ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"  # change this to access env instead
+        return client
 
     @property
     def config(self):
