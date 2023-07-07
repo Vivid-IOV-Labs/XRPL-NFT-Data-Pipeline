@@ -27,6 +27,7 @@ class DataBaseClient:
             return token
 
     async def create_db_pool(self, max_size=1000):
-        dsn = DataBaseClient._get_dsn(self.config.PROXY_CONN_INFO)
+        conn_info = self.config.LOCAL_DB_CONN_INFO if self.config.ENVIRONMENT == "LOCAL" else self.config.PROXY_CONN_INFO
+        dsn = DataBaseClient._get_dsn(conn_info)
         pool = await aiopg.create_pool(dsn=dsn, maxsize=max_size, timeout=1000)
         return pool
