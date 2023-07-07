@@ -111,8 +111,6 @@ if __name__ == "__main__":
         asyncio.run(nft_pricing_summary("create"))
     elif args[1] == "volume-summary":
         asyncio.run(nft_volume_summary("create"))
-    # elif args[1] == "amount-update":
-    #     asyncio.run(xrp_amount_update())
     elif args[1] == "nft-burn-offer":
         asyncio.run(nft_burn_offer("create"))
     elif args[1] == "nft-sales":
