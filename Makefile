@@ -14,10 +14,9 @@ deploy-dev:
 	sls deploy --stage dev
 	mv psycopg2 psycopg2-2
 
-trigger-setup:
+run-trigger:
 	mv psycopg2 psycopg2-new
-	python3.9 trigger.py price-trigger
-	python3.9 trigger.py volume-trigger
+	python3.9 trigger.py $(type)
 	mv psycopg2-new psycopg2
 
 amount-update:
