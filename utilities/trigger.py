@@ -1,6 +1,7 @@
 from .factory import Factory
 from .utils import execute_sql_file
 from typing import Optional
+from datetime import datetime
 
 class TriggerManager:
     def __init__(
@@ -24,6 +25,9 @@ class TriggerManager:
                 await execute_sql_file(connection, self.table_create_script)
             await execute_sql_file(connection, self.function_script)
             await execute_sql_file(connection, self.trigger_create_script)
+            datetime.now().strftime("%Y-%m-%d:%H-%M")
+            print(f"Trigger Creation Time: {datetime.utcnow().strftime('%Y/%m/%d-%H:%M')}")
+            print(f"Trigger Creation Timestamp: {datetime.utcnow().timestamp()}")
             connection.close()
 
     async def update_function(self):
