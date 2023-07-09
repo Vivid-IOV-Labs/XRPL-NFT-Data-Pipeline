@@ -187,3 +187,7 @@ class TaxonPriceGraph(BaseLambdaRunner):
         db_projects = await self._get_db_projects()
         for chunk in chunks(db_projects, 10):
             await asyncio.gather(*[self._run(issuer, taxon) for (issuer, taxon) in chunk])
+
+class NFTSalesGraph(BaseLambdaRunner):
+    def run(self) -> None:
+        pass

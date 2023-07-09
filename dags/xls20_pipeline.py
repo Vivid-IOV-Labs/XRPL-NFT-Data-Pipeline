@@ -32,6 +32,13 @@ async def token_taxon_invoker():
 def token_taxon_dump():
     asyncio.run(token_taxon_invoker())
 
+def nft_sales_dump():
+    from sls_lambda import NFTSalesDump
+    from utilities import factory
+
+    runner = NFTSalesDump(factory)
+    runner.run()
+
 
 def issuer_pricing():
     from sls_lambda import IssuerPriceDump
@@ -72,6 +79,11 @@ with DAG(
         python_callable=token_taxon_dump,
     )
 
+    run_nft_sales_dump = PythonOperator(
+        task_id="nft-sales-dump",
+        python_callable=nft_sales_dump,
+    )
+
     run_issuer_pricing = PythonOperator(
         task_id="issuer-pricing",
         python_callable=issuer_pricing,
@@ -82,4 +94,4 @@ with DAG(
         python_callable=csv_dump,
     )
 
-    run_token_taxon_dump >> run_issuer_pricing >> run_csv_dump
+    [run_token_taxon_dump, run_nft_sales_dump] >> run_issuer_pricing >> run_csv_dump
