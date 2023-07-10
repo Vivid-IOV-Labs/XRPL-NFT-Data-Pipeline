@@ -51,6 +51,9 @@ if __name__ == "__main__":
     elif section == "sales-dump":
         runner = NFTSalesDump(factory)
         runner.run()
+    elif section == "sales-graph":
+        runner = NFTSalesGraph(factory)
+        runner.run()
     elif section == "data":
         graph_runner = GraphDumps(factory)
         twitter_runner = TwitterDump(factory)

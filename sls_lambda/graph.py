@@ -188,6 +188,53 @@ class TaxonPriceGraph(BaseLambdaRunner):
         for chunk in chunks(db_projects, 10):
             await asyncio.gather(*[self._run(issuer, taxon) for (issuer, taxon) in chunk])
 
+
 class NFTSalesGraph(BaseLambdaRunner):
+    def __init__(self, factory):
+        super().__init__(factory)
+        self._set_writer("data")
+
+    async def _get_sales_json(self, path: str) -> dict:
+        hour = path.replace(".json", "")
+        timestamp = datetime.datetime.strptime(hour, '%Y-%m-%d-%H').timestamp()
+        sales = await read_json(self.factory.config.DATA_DUMP_BUCKET, f"sales/{path}", self.factory.config)
+        if sales is None:
+            return {"timestamp": int(timestamp), "hour": hour, "sales": 0}
+        sales["timestamp"] = timestamp
+        return sales
+
+    async def _get_sales_df(self, sales_files):
+        sales_data = []
+        for chunk in chunks(sales_files, 300):
+            chunk_sales = await asyncio.gather(*[self._get_sales_json(file) for file in chunk])
+            sales_data.extend(chunk_sales)
+        sales_df = pd.DataFrame(sales_data)
+        return sales_df
+
+    async def _run(self) -> None:
+        sales_files = sorted(
+            [
+                f"{(datetime.datetime.utcnow() - datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.json"
+                for i in range(720)
+            ]
+        )
+        current = sales_files[-1].replace(".json", "")
+        latest_date = datetime.datetime.strptime(current, '%Y-%m-%d-%H')
+        latest_unix = latest_date.timestamp()
+
+        sales_df = await self._get_sales_df(sales_files)
+        sales_df["x"] = sales_df["timestamp"] * 1000
+        sales_df["y"] = sales_df["sales"]
+        graph_df = sales_df[["x", "y"]]
+        pct = get_pct(graph_df, latest_unix)
+        await self.writer.write_df(graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
+        buffer = StringIO()
+        buffer.write(pct)
+        s3 = get_s3_resource()
+        s3.Object(
+            self.factory.config.DATA_DUMP_BUCKET,
+            "xls20/latest/Sales_Count_Percentage_Change.json",
+        ).put(Body=buffer.getvalue())
+
     def run(self) -> None:
-        pass
+        asyncio.run(self._run())

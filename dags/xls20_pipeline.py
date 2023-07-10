@@ -39,6 +39,13 @@ def nft_sales_dump():
     runner = NFTSalesDump(factory)
     runner.run()
 
+def nft_sales_graph():
+    from sls_lambda import NFTSalesGraph
+    from utilities import factory
+
+    runner = NFTSalesGraph(factory)
+    runner.run()
+
 
 def issuer_pricing():
     from sls_lambda import IssuerPriceDump
@@ -84,6 +91,11 @@ with DAG(
         python_callable=nft_sales_dump,
     )
 
+    run_nft_sales_graph = PythonOperator(
+        task_id="nft-sales-graph",
+        python_callable=nft_sales_graph,
+    )
+
     run_issuer_pricing = PythonOperator(
         task_id="issuer-pricing",
         python_callable=issuer_pricing,
@@ -94,4 +106,4 @@ with DAG(
         python_callable=csv_dump,
     )
 
-    [run_token_taxon_dump, run_nft_sales_dump] >> run_issuer_pricing >> run_csv_dump
+    [run_token_taxon_dump, run_nft_sales_dump] >> [run_issuer_pricing, run_nft_sales_graph] >> run_csv_dump
