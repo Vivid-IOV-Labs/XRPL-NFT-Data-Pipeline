@@ -106,4 +106,4 @@ with DAG(
         python_callable=csv_dump,
     )
 
-    [run_token_taxon_dump, run_nft_sales_dump] >> run_issuer_pricing >> run_nft_sales_graph >> run_csv_dump
+    [run_token_taxon_dump, run_nft_sales_dump] >> run_issuer_pricing >> [run_nft_sales_graph, run_csv_dump]
