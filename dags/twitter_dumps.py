@@ -34,7 +34,7 @@ default_args = {
 with DAG(
     dag_id="TWITTER_DAILY_DUMPS",
     default_args=default_args,
-    schedule_interval="@daily",
+    schedule_interval="@weekly",
     description="This DAG is for twitter social activity dump of all the tracked xls20 nft issuer accounts.",
     start_date=datetime(2023, 6, 20),
     catchup=False,
