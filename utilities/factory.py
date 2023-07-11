@@ -16,25 +16,6 @@ class Factory:
         }
         self._supported_issuers = []
         self._issuers_df = pd.DataFrame()
-        self._untracked_issuers = [
-            "rhsxg4xH8FtYc3eR53XDSjTGfKQsaAGaqm",
-            "rwvQWhjpUncjEbhsD2V9tv4YpKXjfH5RDj",
-            "rMsZProT3MjyCHP6FD9tk4A2WrwDMc6cbE",
-            "rJ8vugKNvcRLrxxpHzuVC2HAa7W4BcA96f",
-            "r3BWpaFk3rtWhhs2Q5FwFqLVdTPnfVUJLr",
-            "rDANq225BqjoyiFPXGcpBTzFdQTnn6aK6z",
-            "rBRFkq47qJpVN4JcL13dUQaLT1HfNuBctb",
-            "rHCRRCUEb2zJNV7FDrhzCivypExBcFT8Wy",
-            "rEzbi191M5AjrucxXKZWbR5QeyfpbedBcV",
-            "rToXSFbQ8enso9A8zbmSrxhWkaNcU6yop",
-            "rBLADEZyJhCtVS1vQm3UcvLac713KyGScN",
-            "rKEGKWH2wKCyY2GNDtkNRqXhnYEsXZM2dP",
-            "ra5jrnrq9BxsvzGeJY5XS9inftcJWMdJUx",
-            "rUCjpVXSWM4tqnG49vHPn4adm7uoz5howG",
-            "rfUkZ3BVmgx5aD3Zo5bZk68hrUrhNth8y3",
-            "rG5qYqxdmDmLkVnPrLcWKE6LYTMeFGhYy9",
-            "rpbjkoncKiv1LkPWShzZksqYPzKXmUhTW7",
-        ]
 
     def _get_bucket(self, section) -> str:
         return self._bucket_mapping[section]
@@ -51,7 +32,7 @@ class Factory:
         if write_proxy is True:
             client.config.PROXY_CONN_INFO[
                 "host"
-            ] = "xrpl-production-datastore.cluster-cqq7smgnm9yf.eu-west-2.rds.amazonaws.com"  # change this to access env instead
+            ] = client.config.WRITE_PROXY
         return client
 
     @property

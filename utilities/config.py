@@ -31,4 +31,5 @@ class Config:
     }
     PROXY_CONN_INFO = {"host": os.getenv("PROXY_HOST"), **DB_BASE_CONN_INFO}
     DB_CONN_INFO = {"host": os.getenv("DB_HOST"), **DB_BASE_CONN_INFO}
+    WRITE_PROXY = os.getenv("WRITE_PROXY_HOST")
     LOCAL_DB_CONN_INFO = {"host": "localhost", "port": "5432", "database": "pkt_test", "user": "postgres", "password": "postgres"}
