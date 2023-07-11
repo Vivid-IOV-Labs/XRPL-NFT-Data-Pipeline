@@ -25,31 +25,31 @@ class TaxonPriceDump(PricingLambdaRunner):
         super().__init__(factory)
         self._set_writer("taxon-price")
 
-    async def _get_taxon_price_summary(self):
+    async def _get_taxon_price_summary(self, issuers):
         pool = await self.db_client.create_db_pool()
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT issuer, taxon, MIN(floor_price) AS floor_price, MAX(max_buy_offer) AS max_buy_offer FROM nft_pricing_summary WHERE burn_offer_hash is NULL GROUP BY issuer, taxon" # noqa
-                )
+                issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
+                query = f"SELECT issuer, taxon, MIN(floor_price) AS floor_price, MAX(max_buy_offer) AS max_buy_offer FROM nft_pricing_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer, taxon"
+                await cursor.execute(query)
                 result = await cursor.fetchall()
             connection.close()
         return result
 
-    async def _get_volume(self):
+    async def _get_volume(self, issuers):
         pool = await self.db_client.create_db_pool()
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(
-                    f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary WHERE burn_offer_hash is NULL GROUP BY issuer, taxon"  # noqa
-                )
+                issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
+                query = f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer, taxon"
+                await cursor.execute(query)
                 result = await cursor.fetchall()
             connection.close()
         return result
 
-    async def _dump_issuer_taxon_volume(self):
+    async def _dump_issuer_taxon_volume(self, issuers):
         now = datetime.datetime.utcnow()
-        volumes = await self._get_volume()
+        volumes = await self._get_volume(issuers)
         data = [{"issuer": issuer, "taxon": taxon, "volume": int(volume) if volume is not None else 0 } for (issuer, taxon, volume) in volumes]
         await self.writer.write_json(f"volume/{now.strftime('%Y-%m-%d-%H')}.json", data)
 
@@ -72,12 +72,10 @@ class TaxonPriceDump(PricingLambdaRunner):
         )
 
     async def _dump_issuers_taxons_pricing(self):  # noqa
-        await self._dump_issuer_taxon_volume()
-        prices = await self._get_taxon_price_summary()
+        issuers = self.factory.supported_issuers
+        await self._dump_issuer_taxon_volume(issuers)
+        prices = await self._get_taxon_price_summary(issuers)
         await asyncio.gather(*[self._dump_issuer_taxon_pricing(data) for data in prices])
-
-    def _run(self, issuer):
-        pass
 
     def run(self) -> None:
         asyncio.run(self._dump_issuers_taxons_pricing())
@@ -92,9 +90,8 @@ class IssuerPriceDump(PricingLambdaRunner):
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
-                await cursor.execute(
-                    f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer;"
-                )
+                query = f"SELECT issuer, MIN(floor_price) AS floor_price, MAX(max_buy_offer) as max_buy_offer, (MAX(max_buy_offer)::DECIMAL + MIN(floor_price)::DECIMAL)/2 AS mid_price FROM nft_pricing_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer;"
+                await cursor.execute(query)
                 result = await cursor.fetchall()
             connection.close()
         return result

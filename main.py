@@ -54,20 +54,6 @@ if __name__ == "__main__":
     elif section == "sales-graph":
         runner = NFTSalesGraph(factory)
         runner.run()
-    elif section == "data":
-        graph_runner = GraphDumps(factory)
-        twitter_runner = TwitterDump(factory)
-        table_runner = TableDump(factory)
-
-        p1 = Process(target=graph_runner.run)
-        p2 = Process(target=twitter_runner.run)
-        p3 = Process(target=table_runner.sync_run)
-        p1.start()
-        p2.start()
-        p3.start()
-        p1.join()
-        p2.join()
-        p3.join()
     else:
         logger.info(
             "Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`"

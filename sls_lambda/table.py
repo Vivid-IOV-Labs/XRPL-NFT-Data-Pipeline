@@ -116,6 +116,7 @@ class TableDump(BaseLambdaRunner):
             )
 
         df["market_cap"] = df["market_cap"].astype(float)
+        df = df[df["issuer"].isin(self.factory.supported_issuers)]
         df = df.sort_values(by=["market_cap"], ascending=False)
         df = df.reset_index()
         df["rank"] = df.index + 1
@@ -154,9 +155,9 @@ class TableDump(BaseLambdaRunner):
         sum["twitter_new"] = sum["twitter"].str.lower()
         sum_previous["twitter_new"] = sum_previous["twitter"].str.lower()
         profile_img_df["twitter_new"] = profile_img_df["twitter"].str.lower()
-        df = pd.merge(df, sum, on="twitter_new", how="outer")
-        df = pd.merge(df, sum_previous, on="twitter_new", how="outer")
-        df = pd.merge(df, profile_img_df, on="twitter_new", how="outer")
+        df = pd.merge(df, sum, on="twitter_new", how="left")
+        df = pd.merge(df, sum_previous, on="twitter_new", how="left")
+        df = pd.merge(df, profile_img_df, on="twitter_new", how="left")
 
         df["value"] = (
             (df["tweets"] + df["retweets"] + df["likes"]).fillna(0.0).astype(int)
