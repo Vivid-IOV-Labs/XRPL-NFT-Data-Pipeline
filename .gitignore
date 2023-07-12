@@ -5,7 +5,7 @@ scratch.py
 *.csv
 *.log
 *.js
-.env
+.env*
 .idea/
 __pycache__/
 /.serverless/
