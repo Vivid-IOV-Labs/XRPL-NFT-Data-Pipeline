@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS nft_pricing_summary
 	floor_price text COLLATE pg_catalog."default",
 	max_buy_offer text COLLATE pg_catalog."default",
 	issuer text COLLATE pg_catalog."default",
-	taxon bigint
+	taxon bigint,
+    burn_offer_hash VARCHAR(255) UNIQUE
 )
 
 TABLESPACE pg_default;
