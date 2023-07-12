@@ -2,11 +2,10 @@ import asyncio
 import logging
 import sys
 import time
-from multiprocessing import Process
 
 from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
                         NFTokenDump, TaxonPriceGraph, TableDump, TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph)
-from utilities import factory
+from utilities import Factory, Config
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -21,6 +20,9 @@ logger.setLevel(logging.INFO)
 if __name__ == "__main__":
     section = sys.argv[1]
     start = time.time()
+
+    config = Config.from_env('.env.local')
+    factory = Factory(config)
     if section == "token-dump":
         runner = NFTokenDump(factory)
         asyncio.run(runner.run())

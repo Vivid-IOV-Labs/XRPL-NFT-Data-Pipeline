@@ -1,23 +1,23 @@
-from utilities import Factory, BaseConfig, LocalFileWriter, AsyncS3FileWriter
+from utilities import Factory, Config, LocalFileWriter
 from dotenv import load_dotenv
 
 
 def test_config():
     # Test load config from env-file
-    testing_config = BaseConfig.from_env(".env.test")
-    local_config = BaseConfig.from_env(".env.local")
-    prod_config = BaseConfig.from_env(".env")
+    testing_config = Config.from_env(".env.test")
+    local_config = Config.from_env(".env.local")
+    prod_config = Config.from_env(".env")
     assert testing_config.ENVIRONMENT == "TESTING"
     assert local_config.ENVIRONMENT == "LOCAL"
     assert prod_config.ENVIRONMENT == "PROD"
 
     # Test Load config without env-file
     load_dotenv(".env", override=True)
-    config = BaseConfig.from_env()
+    config = Config.from_env()
     assert config.ENVIRONMENT == "PROD"
 
 def test_factory():
-    testing_config = BaseConfig.from_env(".env.test")
+    testing_config = Config.from_env(".env.test")
     testing_factory = Factory(testing_config)
 
     local_writer = testing_factory.get_writer()
