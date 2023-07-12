@@ -205,7 +205,7 @@ class NFTSalesGraph(BaseLambdaRunner):
 
     async def _get_sales_df(self, sales_files):
         sales_data = []
-        for chunk in chunks(sales_files, 300):
+        for chunk in chunks(sales_files, 100):
             chunk_sales = await asyncio.gather(*[self._get_sales_json(file) for file in chunk])
             sales_data.extend(chunk_sales)
         sales_df = pd.DataFrame(sales_data)
@@ -215,7 +215,7 @@ class NFTSalesGraph(BaseLambdaRunner):
         sales_files = sorted(
             [
                 f"{(datetime.datetime.utcnow() - datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.json"
-                for i in range(720)
+                for i in range(168)
             ]
         )
         current = sales_files[-1].replace(".json", "")
@@ -226,8 +226,9 @@ class NFTSalesGraph(BaseLambdaRunner):
         sales_df["x"] = sales_df["timestamp"] * 1000
         sales_df["y"] = sales_df["sales"]
         graph_df = sales_df[["x", "y"]]
+        week_graph_df = get_weekly_df(graph_df, 168)
         pct = get_pct(graph_df, latest_unix)
-        await self.writer.write_df(graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
+        await self.writer.write_df(week_graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
         buffer = StringIO()
         buffer.write(pct)
         s3 = get_s3_resource()
