@@ -16,8 +16,10 @@ logger.setLevel(logging.INFO)
 
 def twitter_social_activity_dump():
     from sls_lambda import TwitterDump
-    from utilities import factory
+    from utilities import Factory, Config
 
+    config = Config.from_env()
+    factory = Factory(config)
     runner = TwitterDump(factory)
     runner.run()
 

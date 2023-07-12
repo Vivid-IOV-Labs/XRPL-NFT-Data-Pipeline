@@ -17,15 +17,19 @@ logger.setLevel(logging.INFO)
 
 def taxon_price_summary():
     from sls_lambda import TaxonPriceDump
-    from utilities import factory
+    from utilities import Factory, Config
 
+    config = Config.from_env()
+    factory = Factory(config)
     runner = TaxonPriceDump(factory)
     runner.run()
 
 def project_price_graphs():
     from sls_lambda import TaxonPriceGraph
-    from utilities import factory
+    from utilities import Factory, Config
 
+    config = Config.from_env()
+    factory = Factory(config)
     runner = TaxonPriceGraph(factory)
     asyncio.run(runner.run())
 
