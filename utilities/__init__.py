@@ -10,5 +10,3 @@ from .utils import (cap1, chunks, execute_sql_file, fetch_dumped_taxon_prices,
 from .writers import AsyncS3FileWriter, BaseFileWriter, LocalFileWriter
 from .twitter import TwitterClient
 from .trigger import TriggerManager
-
-factory = Factory(Config)

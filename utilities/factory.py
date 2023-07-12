@@ -2,10 +2,11 @@ import pandas as pd
 
 from .writers import AsyncS3FileWriter, LocalFileWriter, BaseFileWriter
 from .db import DataBaseClient
+from .config import Config
 
 
 class Factory:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self._config = config
         self._bucket_mapping = {
             "price": config.PRICE_DUMP_BUCKET,

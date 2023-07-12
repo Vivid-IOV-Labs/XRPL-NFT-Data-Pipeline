@@ -2,12 +2,13 @@ import requests
 import logging
 from datetime import datetime, timedelta, timezone
 from requests.auth import HTTPBasicAuth
+from .config import Config
 
 logger = logging.getLogger("app_log")
 
 
 class TwitterClient:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self.config = config
         self._bearer_token = None
         self._base_url = "https://api.twitter.com"

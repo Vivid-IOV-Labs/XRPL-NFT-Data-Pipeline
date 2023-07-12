@@ -7,7 +7,6 @@ import aioboto3
 import boto3
 import numpy as np
 import pandas as pd
-import snscrape.modules.twitter as twitter_scrapper
 import tweepy
 
 from .config import Config
