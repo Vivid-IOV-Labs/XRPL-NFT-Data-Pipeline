@@ -7,7 +7,7 @@ class DataBaseClient:
         self.config = config
 
     def _get_dsn(self):
-        conn_info = self.config.DB_CONN_INFO if self.config.ENVIRONMENT == "LOCAL" else self.config.PROXY_CONN_INFO
+        conn_info = self.config.DB_CONN_INFO
         return "dbname={database} user={user} host={host} password={password}".format(
             **conn_info
         )

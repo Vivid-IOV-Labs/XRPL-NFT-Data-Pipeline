@@ -29,7 +29,7 @@ def test_factory():
     # Test Write Proxy DB Client
     testing_config.WRITE_PROXY = "proxy.aws.com"
     db_client = testing_factory.get_db_client(write_proxy=True)
-    assert db_client.config.PROXY_CONN_INFO["host"] == testing_config.WRITE_PROXY
+    assert db_client.config.DB_CONN_INFO["host"] == testing_config.WRITE_PROXY
 
 def test_db_client():
     pass

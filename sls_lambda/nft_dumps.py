@@ -5,13 +5,13 @@ import time
 
 import aiohttp
 
-from utilities import chunks
+from utilities import chunks, Factory
 
 from .base import BaseLambdaRunner
 
 
 class NFTokenDump(BaseLambdaRunner):
-    def __init__(self, factory):
+    def __init__(self, factory: Factory):
         super().__init__(factory)
         self.base_url = "https://api.xrpldata.com/api/v1/xls20-nfts/issuer"
         self._set_writer("nft")
@@ -52,7 +52,7 @@ class NFTokenDump(BaseLambdaRunner):
         return_data["tokens_held"] = return_data["supply"] - return_data["circulation"]
         return return_data
 
-    async def run(self):
+    async def _run(self):
         supported_issuers = self.factory.supported_issuers
         supply = []
         for chunk in chunks(supported_issuers, 10):
@@ -60,8 +60,14 @@ class NFTokenDump(BaseLambdaRunner):
                 *[self._dump_issuer_nfts(issuer) for issuer in chunk]
             )
             supply.extend(result)
+            if self.factory.config.ENVIRONMENT == "TESTING":
+                break
             time.sleep(60)
         await self.writer.write_json("supply.json", supply)
+
+    def run(self):
+        asyncio.run(self._run())
+
 
 
 class NFTaxonDump(BaseLambdaRunner):
@@ -77,7 +83,7 @@ class NFTaxonDump(BaseLambdaRunner):
                 data = json.loads(content)
                 return data["data"]
 
-    async def run(self):
+    async def _run(self):
         supported_issuers = self.factory.supported_issuers
         taxons = []
         for chunk in chunks(supported_issuers, 10):
@@ -85,5 +91,10 @@ class NFTaxonDump(BaseLambdaRunner):
                 *[self._get_issuer_taxons(issuer) for issuer in chunk]
             )
             taxons.extend(chunk_taxons)
+            if self.factory.config.ENVIRONMENT == "TESTING":
+                break
             time.sleep(60)
         await self.writer.write_json("taxon.json", taxons)
+
+    def run(self) -> None:
+        asyncio.run(self._run())

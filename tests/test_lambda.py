@@ -1,13 +1,12 @@
-import datetime
 import pandas as pd
-import os
 
-import pytest
-
-from sls_lambda import CSVDump
+from sls_lambda import CSVDump, NFTaxonDump, NFTokenDump
+from utilities import Factory
+import json
 
 def test_csv_dump(setup):
-    factory = setup["factory"]
+    config = setup["config"]
+    factory = Factory(config)
     cwd = setup["cwd"]
     last_hour = setup["last_hour"]
 
@@ -44,3 +43,27 @@ def test_csv_dump(setup):
     assert all(column in price_df.columns for column in expected_price_columns)
     assert len(csv_df) == len(factory.supported_issuers)
     assert len(price_df) == len(factory.supported_issuers)
+
+
+def test_nft_dumps(setup):
+    config = setup["config"]
+    cwd = setup["cwd"]
+    last_hour = setup["last_hour"]
+    factory = Factory(config)
+    factory._supported_issuers = factory._supported_issuers[:5]
+    nft_dump_runner = NFTokenDump(factory)
+    nft_dump_runner.run()
+    nft_taxon_dump_runner = NFTaxonDump(factory)
+    nft_taxon_dump_runner.run()
+
+    # Check for nft-token-dump files
+    for issuer in factory.supported_issuers:
+        data = json.load(open(f"{cwd}/data/test/{last_hour}/{issuer}.json"))
+        assert type(data["nfts"]) == list
+        assert type(data["issuer"]) == str
+    # Check for supply.json dump
+    supply_dump = json.load(open(f"{cwd}/data/test/supply.json"))
+    assert len(supply_dump) == len(factory.supported_issuers)
+    # Check for taxon-dump file
+    taxon_dump = json.load(open(f"{cwd}/data/test/taxon.json"))
+    assert len(taxon_dump) == len(factory.supported_issuers)

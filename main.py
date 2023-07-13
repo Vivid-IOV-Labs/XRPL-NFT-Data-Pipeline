@@ -25,10 +25,10 @@ if __name__ == "__main__":
     factory = Factory(config)
     if section == "token-dump":
         runner = NFTokenDump(factory)
-        asyncio.run(runner.run())
+        runner.run()
     elif section == "taxon-dump":
         runner = NFTaxonDump(factory)
-        asyncio.run(runner.run())
+        runner.run()
     elif section == "issuer-pricing":
         runner = IssuerPriceDump(factory)
         asyncio.run(runner.run())

@@ -19,14 +19,14 @@ def issuers_nft_dumps(event, context):
     config = Config.from_env()
     factory = Factory(config)
     runner = NFTokenDump(factory)
-    asyncio.run(runner.run())
+    runner.run()
 
 
 def issuers_taxon_dumps(event, context):
     config = Config.from_env()
     factory = Factory(config)
     runner = NFTaxonDump(factory)
-    asyncio.run(runner.run())
+    runner.run()
 
 
 def issuers_price_dump(event, context):

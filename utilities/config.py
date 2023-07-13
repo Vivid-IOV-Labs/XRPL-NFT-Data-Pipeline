@@ -17,7 +17,6 @@ class Config:
     TWITTER_API_KEY: str
     TWITTER_API_SECRET: str
     STAGE: str
-    PROXY_CONN_INFO: Dict
     DB_CONN_INFO: Dict
     WRITE_PROXY: str
 
@@ -31,19 +30,12 @@ class Config:
         if env_file is not None:
             from dotenv import load_dotenv
             load_dotenv(env_file, override=True)
-        base_db_conn = {
+        db_conn = {
+            "host": os.environ["DB_HOST"],
             "port": os.environ["DB_PORT"],
             "database": os.environ["DB_NAME"],
             "user": os.environ["DB_USER"],
             "password": os.environ["DB_PASSWORD"],
-        }
-        proxy_db_conn = {
-            "host": os.environ["PROXY_HOST"],
-            **base_db_conn
-        }
-        db_conn = {
-            "host": os.environ["DB_HOST"],
-            **base_db_conn
         }
         config = cls(
             ENVIRONMENT=os.environ["ENVIRONMENT"],
@@ -58,7 +50,6 @@ class Config:
             TWITTER_API_KEY = os.environ["TWITTER_API_KEY"],
             TWITTER_API_SECRET = os.environ["TWITTER_API_SECRET"],
             STAGE = os.environ["STAGE"],
-            PROXY_CONN_INFO=proxy_db_conn,
             DB_CONN_INFO=db_conn,
             WRITE_PROXY=os.environ["WRITE_PROXY_HOST"]
         )

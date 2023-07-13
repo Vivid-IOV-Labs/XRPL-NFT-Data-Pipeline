@@ -31,7 +31,7 @@ class Factory:
     def get_db_client(self, write_proxy=False) -> DataBaseClient:
         client = DataBaseClient(self._config)
         if write_proxy is True:
-            client.config.PROXY_CONN_INFO[
+            client.config.DB_CONN_INFO[
                 "host"
             ] = client.config.WRITE_PROXY
         return client
@@ -46,7 +46,12 @@ class Factory:
             return self._supported_issuers
         nft_sheet_df = pd.read_csv(self._config.NFTS_SHEET_URL)
         supported_issuers = nft_sheet_df["Issuer_Account"].values.tolist()
-        self._supported_issuers = supported_issuers
+        if self._config.ENVIRONMENT == "TESTING":
+            self._supported_issuers = supported_issuers[:5]
+            self._issuers_df = nft_sheet_df.iloc[:5]
+        else:
+            self._supported_issuers = supported_issuers
+            self._issuers_df = nft_sheet_df
         return self._supported_issuers
 
     @property
@@ -54,5 +59,8 @@ class Factory:
         if not self._issuers_df.empty:
             return self._issuers_df
         nft_sheet_df = pd.read_csv(self._config.NFTS_SHEET_URL)
-        self._issuers_df = nft_sheet_df
+        if self._config.ENVIRONMENT == "TESTING":
+            self._issuers_df = nft_sheet_df.iloc[:5]
+        else:
+            self._issuers_df = nft_sheet_df
         return self._issuers_df
