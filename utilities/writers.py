@@ -65,10 +65,10 @@ class LocalFileWriter(BaseFileWriter):
 
 
 class AsyncS3FileWriter(BaseFileWriter):
-    def __init__(self, bucket):
+    def __init__(self, bucket, config: Config):
         self.bucket = bucket
-        self.access_key_id = Config.ACCESS_KEY_ID
-        self.secret_access_key = Config.SECRET_ACCESS_KEY
+        self.access_key_id = config.ACCESS_KEY_ID
+        self.secret_access_key = config.SECRET_ACCESS_KEY
 
     async def _write(self, path, buffer):
         session = aioboto3.Session(
