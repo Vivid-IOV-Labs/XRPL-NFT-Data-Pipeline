@@ -1,4 +1,4 @@
-include .env
+include env/.env.local
 
 docker-start:
 	cp -r sls_lambda utilities dags
