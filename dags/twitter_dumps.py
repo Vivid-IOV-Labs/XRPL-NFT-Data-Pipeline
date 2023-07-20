@@ -18,7 +18,7 @@ def twitter_social_activity_dump():
     from sls_lambda import TwitterDump
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     runner = TwitterDump(factory)
     runner.run()

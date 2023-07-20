@@ -24,7 +24,7 @@ async def token_taxon_invoker():
     from sls_lambda.invokers import invoke_taxon_dumps, invoke_token_dumps
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     await asyncio.gather(
         *[invoke_token_dumps(factory.config), invoke_taxon_dumps(factory.config)]
@@ -38,7 +38,7 @@ def nft_sales_dump():
     from sls_lambda import NFTSalesDump
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     runner = NFTSalesDump(factory)
     runner.run()
@@ -47,7 +47,7 @@ def nft_sales_graph():
     from sls_lambda import NFTSalesGraph
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     runner = NFTSalesGraph(factory)
     runner.run()
@@ -57,7 +57,7 @@ def issuer_pricing():
     from sls_lambda import IssuerPriceDump
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     issuer_price_runner = IssuerPriceDump(factory)
     asyncio.run(issuer_price_runner.run())
@@ -67,7 +67,7 @@ def csv_dump():
     from sls_lambda.invokers import invoke_csv_dump
     from utilities import Factory, Config
 
-    config = Config.from_env()
+    config = Config.from_env(".env")
     factory = Factory(config)
     invoke_csv_dump(factory.config)
 
