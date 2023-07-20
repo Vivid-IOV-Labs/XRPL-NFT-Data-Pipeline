@@ -4,12 +4,11 @@ from io import StringIO
 from typing import List
 
 import aioboto3
+from .config import Config
 import boto3
 import numpy as np
 import pandas as pd
 import tweepy
-
-from .config import Config
 
 
 def chunks(lst: List, n: int):
@@ -162,17 +161,17 @@ def get_pct(df, t):
     return json.dumps(pct_dic)
 
 
-def get_s3_resource():
+def get_s3_resource(config: Config):
     s3 = boto3.resource(
         "s3",
-        aws_access_key_id=Config.ACCESS_KEY_ID,
-        aws_secret_access_key=Config.SECRET_ACCESS_KEY,
+        aws_access_key_id=config.ACCESS_KEY_ID,
+        aws_secret_access_key=config.SECRET_ACCESS_KEY,
     )
     return s3
 
 
-def write_df(df: pd.DataFrame, path: str, file_type: str, **kwargs):
-    if Config.ENVIRONMENT == "LOCAL":
+def write_df(df: pd.DataFrame, config: Config, path: str, file_type: str, **kwargs):
+    if config.ENVIRONMENT == "LOCAL":
         if path.startswith("data") is False:
             path = (
                 f"data/csv_dumps/{path}"
@@ -184,7 +183,7 @@ def write_df(df: pd.DataFrame, path: str, file_type: str, **kwargs):
         elif file_type == "json":
             df.to_json(path, indent=4, orient="records")
     else:
-        s3 = get_s3_resource()
+        s3 = get_s3_resource(config)
         buffer = StringIO()
         if file_type == "csv":
             df.to_csv(buffer, index=False)  # noqa

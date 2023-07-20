@@ -32,7 +32,7 @@ class GraphDumps(BaseLambdaRunner):
         except FileNotFoundError:
             logger.info(f"file not found for {path}")
 
-    def run(self) -> None:
+    async def _run(self):
         files = sorted(
             [
                 f"{(datetime.datetime.utcnow() - datetime.timedelta(hours=i)).strftime('%Y-%m-%d-%H')}.csv"
@@ -64,79 +64,60 @@ class GraphDumps(BaseLambdaRunner):
             df_new = df.copy()
             df_new["x"] = df_new["x"] * 1000
             pct = get_pct(df, latest_unix)
-            if self.factory.config.ENVIRONMENT == "LOCAL":
-                write_df(df_new, f"data/json_dumps/{col}_Graph.json", "json")
-                if col == "Market_Cap":
-                    day_df = get_day_df(df, 24)  # noqa
-                    week_df = get_weekly_df(df, 168)
-                    month_df = get_monthly_df(df, 672)
-                    day_df["x"] = day_df["x"] * 1000
-                    week_df["x"] = week_df["x"] * 1000
-                    month_df["x"] = month_df["x"] * 1000
-                    write_df(day_df, f"data/json_dumps/{col}_Graph_Day.json", "json")
-                    write_df(week_df, f"data/json_dumps/{col}_Graph_Week.json", "json")
-                    write_df(
-                        month_df, f"data/json_dumps/{col}_Graph_Month.json", "json"
-                    )
-                with open(f"data/json_dumps/{col}_Percentage_Change.json", "w") as file:
-                    file.write(pct)
+            if col == "Market_Cap":
+                await self.writer.write_df(
+                    df_new,
+                    f"xls20/latest/{col}_Graph.json",
+                    "json",
+                )
+                day_df = get_day_df(df, 24)  # noqa
+                week_df = get_weekly_df(df, 168)
+                month_df = get_monthly_df(df, 672)
+                day_df["x"] = day_df["x"] * 1000
+                week_df["x"] = week_df["x"] * 1000
+                month_df["x"] = month_df["x"] * 1000
+                await self.writer.write_df(
+                    df,
+                    f"xls20/history/{int(latest_unix)}/{col}_Graph.json",
+                    "json"
+                )
+                await self.writer.write_df(
+                    day_df,
+                    f"xls20/latest/{col}_Graph_Day.json",
+                    "json"
+                )
+                await self.writer.write_df(
+                    week_df,
+                    f"xls20/latest/{col}_Graph_Week.json",
+                    "json"
+                )
+                await self.writer.write_df(
+                    month_df,
+                    f"xls20/latest/{col}_Graph_Month.json",
+                    "json"
+                )
             else:
-                if col == "Market_Cap":
-                    write_df(
-                        df_new,
-                        f"xls20/latest/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    day_df = get_day_df(df, 24)  # noqa
-                    week_df = get_weekly_df(df, 168)
-                    month_df = get_monthly_df(df, 672)
-                    day_df["x"] = day_df["x"] * 1000
-                    week_df["x"] = week_df["x"] * 1000
-                    month_df["x"] = month_df["x"] * 1000
-                    write_df(
-                        df,
-                        f"xls20/history/{int(latest_unix)}/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        day_df,
-                        f"xls20/latest/{col}_Graph_Day.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        week_df,
-                        f"xls20/latest/{col}_Graph_Week.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                    write_df(
-                        month_df,
-                        f"xls20/latest/{col}_Graph_Month.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                else:
-                    week_df = get_day_df(df, 168)
-                    write_df(
-                        week_df,
-                        f"xls20/latest/{col}_Graph.json",
-                        "json",
-                        bucket=self.factory.config.DATA_DUMP_BUCKET,
-                    )
-                buffer = StringIO()
-                buffer.write(pct)
-                s3 = get_s3_resource()
-                s3.Object(
-                    self.factory.config.DATA_DUMP_BUCKET,
-                    f"xls20/history/{int(latest_unix)}/{col}_Percentage_Change.json",
-                ).put(Body=buffer.getvalue())
-                s3.Object(
-                    self.factory.config.DATA_DUMP_BUCKET,
-                    f"xls20/latest/{col}_Percentage_Change.json",
-                ).put(Body=buffer.getvalue())
+                week_df = get_day_df(df, 168)
+                await self.writer.write_df(
+                    week_df,
+                    f"xls20/latest/{col}_Graph.json",
+                    "json"
+                )
+            buffer = StringIO()
+            buffer.write(pct)
+            s3 = get_s3_resource(self.factory.config)
+            s3.Object(
+                self.factory.config.DATA_DUMP_BUCKET,
+                f"xls20/history/{int(latest_unix)}/{col}_Percentage_Change.json",
+            ).put(Body=buffer.getvalue())
+            s3.Object(
+                self.factory.config.DATA_DUMP_BUCKET,
+                f"xls20/latest/{col}_Percentage_Change.json",
+            ).put(Body=buffer.getvalue())
+
+    def run(self) -> None:
+        asyncio.run(self._run())
+
 
 class TaxonPriceGraph(BaseLambdaRunner):
     def __init__(self, factory):
@@ -231,7 +212,7 @@ class NFTSalesGraph(BaseLambdaRunner):
         await self.writer.write_df(week_graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
         buffer = StringIO()
         buffer.write(pct)
-        s3 = get_s3_resource()
+        s3 = get_s3_resource(self.factory.config)
         s3.Object(
             self.factory.config.DATA_DUMP_BUCKET,
             "xls20/latest/Sales_Count_Percentage_Change.json",
