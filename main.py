@@ -21,7 +21,7 @@ if __name__ == "__main__":
     section = sys.argv[1]
     start = time.time()
 
-    config = Config.from_env('.env.local')
+    config = Config.from_env('env/.env.local')
     factory = Factory(config)
     if section == "token-dump":
         runner = NFTokenDump(factory)
