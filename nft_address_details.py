@@ -1,8 +1,6 @@
-import json
 import sys
 import time
 import snowflake.connector
-from snowflake.connector.pandas_tools import write_pandas
 import json
 
 import aiohttp
@@ -10,8 +8,6 @@ import pandas as pd
 import asyncio
 
 from utilities import LocalFileWriter, chunks
-
-# snowflake.connector.paramstyle = "qmark"
 
 
 writer = LocalFileWriter()
@@ -30,7 +26,7 @@ async def fetch_address_details_from_bithomp_api(address: str):
                 print(f"Error Fetching address Details: {content}")
 
 async def dump():
-    addresses = pd.read_csv(ADDRESS_FILE)["Addresses"].to_list()
+    addresses = pd.read_csv(ADDRESS_FILE)["ACCOUNT"].to_list()
     final_data = []
     try:
         fetched_addresses = json.load(open("data/local/addresses/fetched.json", "r"))
@@ -141,9 +137,8 @@ def upload_to_snowflake(data, connection, table):
 if __name__ == "__main__":
     arg = sys.argv[1]
 
-    connection = create_snowflake_connection()
-
     if arg == "create-table":
+        connection = create_snowflake_connection()
         create_snowflake_table(connection)
     elif arg == "dump-data":
         asyncio.run(dump())
@@ -160,6 +155,7 @@ if __name__ == "__main__":
         df[num_cols] = df[num_cols].fillna(0)
         df = df.fillna("")
         data = df.to_dict(orient="records")
+        connection = create_snowflake_connection()
         upload_to_snowflake(data, connection, "XRPL_ADDRESS_DETAILS")
     else:
         print("invalid argument")
