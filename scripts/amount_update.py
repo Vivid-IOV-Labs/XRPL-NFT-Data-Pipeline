@@ -78,7 +78,6 @@ async def run():
     result = await fetch_nft_projects()
     to_dump = [{"token_id": res[0], "issuer": res[1], "uri": res[2], "taxon": res[3]} for res in result]
 
-    json.d
     __import__("ipdb").set_trace()
     # null_offers = await fetch_null_offers()
     # issuer_currencies = set([(data[0], data[1]) for data in null_offers])

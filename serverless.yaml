@@ -41,6 +41,7 @@ package:
     - '!dags/'
     - '!logs/'
     - '!plugins/'
+    - '!scripts/**'
     - '!tests/'
     - '!conftest.py'
     - '!main.py'
