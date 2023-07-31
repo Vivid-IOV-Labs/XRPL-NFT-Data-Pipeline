@@ -16,17 +16,17 @@ deploy-dev:
 
 run-trigger:
 	mv psycopg2 psycopg2-new
-	python3.9 trigger.py $(type)
+	python3.9 scripts/trigger.py $(type)
 	mv psycopg2-new psycopg2
 
 amount-update:
 	mv psycopg2 psycopg2-new
-	python3.9 amount_update.py
+	python3.9 scripts/amount_update.py
 	mv psycopg2-new psycopg2
 
 load-nixer:
 	mv psycopg2 psycopg2-new
-	python3.9 nixer-offer-loader.py
+	python3.9 scripts/nixer-offer-loader.py
 	mv psycopg2-new psycopg2
 
 airflow-server:
