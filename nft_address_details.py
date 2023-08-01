@@ -7,52 +7,52 @@ import aiohttp
 import pandas as pd
 import asyncio
 
-from utilities import LocalFileWriter, chunks
+from utilities import LocalFileWriter, chunks, Config
 
 
 writer = LocalFileWriter()
 ADDRESS_FILE = "data/addresses.csv"
+BITHOMP_BASE_URL = "https://bithomp.com/api/v2"
 
-async def fetch_address_details_from_bithomp_api(address: str):
-    async with aiohttp.ClientSession(headers={"x-bithomp-token": "e2079870-7242-11ed-95dd-ab1ab9ffd825"}) as session:  # noqa
-        url = f"https://bithomp.com/api/v2/address/{address}%username=true&service=true&verifiedDomain=true&inception=true&ledgerInfo=true"
+async def fetch_address_details_from_bithomp_api(address: str, cfg: Config):
+    async with aiohttp.ClientSession(headers={"x-bithomp-token": cfg.BITHOMP_TOKEN}) as session:  # noqa
+        url = f"{BITHOMP_BASE_URL}/address/{address}?username=true&service=true&verifiedDomain=true&inception=true&ledgerInfo=true"
         async with session.get(url) as response:  # noqa
             if response.status == 200:
                 content = await response.content.read()
                 to_dict = json.loads(content)
-                return to_dict
+                return to_dict if "address" in to_dict else None
             else:
                 content = await response.content.read()
                 print(f"Error Fetching address Details: {content}")
 
-async def dump():
+async def dump(cfg: Config):
     addresses = pd.read_csv(ADDRESS_FILE)["ACCOUNT"].to_list()
     final_data = []
     try:
         fetched_addresses = json.load(open("data/local/addresses/fetched.json", "r"))
         final_data = json.load(open("data/local/addresses/details.json", "r"))
     except FileNotFoundError as e:
-        print(e)
         fetched_addresses = []
         final_data = []
     to_fetch = list(set(addresses) - set(fetched_addresses))
     for chunk in chunks(to_fetch, 100):
-        details = await asyncio.gather(*[fetch_address_details_from_bithomp_api(address) for address in chunk])
+        details = await asyncio.gather(*[fetch_address_details_from_bithomp_api(address, cfg) for address in chunk])
         fetched_addresses.extend(chunk)
-        final_data.extend(details)
+        final_data.extend([detail for detail in details if detail is not None])
         await writer.write_json("addresses/fetched.json", fetched_addresses)
         await writer.write_json("addresses/details.json", final_data)
         print("sleeping for 60s ...")
         time.sleep(60)
 
 
-def create_snowflake_connection():
+def create_snowflake_connection(cfg: Config):
     conn = snowflake.connector.connect(
-        user='TOBI',
-        password='Kelechi@2000',
-        account='im75570.eu-west-2.aws',
+        user=cfg.SNOWFLAKE_USER,
+        password=cfg.SNOWFLAKE_PASSWORD,
+        account=cfg.SNOWFLAKE_ACCOUNT,
         warehouse='USER_REPORT_WH',
-        database='XRPL_USER_INFO',
+        database=cfg.SNOWFLAKE_DB,
         schema='PUBLIC',
         role='USERREPORTADMIN'
     )
@@ -133,15 +133,14 @@ def upload_to_snowflake(data, connection, table):
     connection.close()
 
 
-
 if __name__ == "__main__":
     arg = sys.argv[1]
-
+    config = Config.from_env(".env")
     if arg == "create-table":
-        connection = create_snowflake_connection()
+        connection = create_snowflake_connection(config)
         create_snowflake_table(connection)
     elif arg == "dump-data":
-        asyncio.run(dump())
+        asyncio.run(dump(config))
     elif arg == "load-data":
         num_cols = ["inception", "initial_balance", "genesis"]
         df = pd.read_json("data/local/addresses/details.json")
@@ -155,7 +154,7 @@ if __name__ == "__main__":
         df[num_cols] = df[num_cols].fillna(0)
         df = df.fillna("")
         data = df.to_dict(orient="records")
-        connection = create_snowflake_connection()
+        connection = create_snowflake_connection(config)
         upload_to_snowflake(data, connection, "XRPL_ADDRESS_DETAILS")
     else:
         print("invalid argument")

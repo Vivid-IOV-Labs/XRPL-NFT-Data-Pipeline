@@ -19,6 +19,11 @@ class Config:
     STAGE: str
     DB_CONN_INFO: Dict
     WRITE_PROXY: str
+    SNOWFLAKE_USER: str
+    SNOWFLAKE_PASSWORD: str
+    SNOWFLAKE_ACCOUNT: str
+    SNOWFLAKE_DB: str
+    BITHOMP_TOKEN: str
 
     @classmethod
     def from_env(cls, env_file: Optional[str] = None) -> 'Config':
@@ -51,6 +56,11 @@ class Config:
             TWITTER_API_SECRET = os.environ["TWITTER_API_SECRET"],
             STAGE = os.environ["STAGE"],
             DB_CONN_INFO=db_conn,
-            WRITE_PROXY=os.environ["WRITE_PROXY_HOST"]
+            WRITE_PROXY=os.environ["WRITE_PROXY_HOST"],
+            SNOWFLAKE_DB=os.getenv("SNOWFLAKE_DB"),
+            SNOWFLAKE_USER=os.getenv("SNOWFLAKE_USER"),
+            SNOWFLAKE_ACCOUNT=os.getenv("SNOWFLAKE_ACCOUNT"),
+            SNOWFLAKE_PASSWORD=os.getenv("SNOWFLAKE_PASSWORD"),
+            BITHOMP_TOKEN=os.getenv("BITHOMP_TOKEN")
         )
         return config
