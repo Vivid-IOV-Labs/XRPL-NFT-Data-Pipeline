@@ -6,6 +6,7 @@ import time
 from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
                         NFTokenDump, TaxonPriceGraph, TableDump, TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph)
 from utilities import Factory, Config
+from scripts import
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -16,6 +17,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
+# Entry Point For Pipeline and Scripts [As A CLI]
 
 if __name__ == "__main__":
     section = sys.argv[1]
