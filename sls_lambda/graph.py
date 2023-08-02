@@ -204,11 +204,12 @@ class NFTSalesGraph(BaseLambdaRunner):
         latest_unix = latest_date.timestamp()
 
         sales_df = await self._get_sales_df(sales_files)
-        sales_df["x"] = sales_df["timestamp"] * 1000
+        sales_df["x"] = sales_df["timestamp"]
         sales_df["y"] = sales_df["sales"]
         graph_df = sales_df[["x", "y"]]
         week_graph_df = get_weekly_df(graph_df, 168)
         pct = get_pct(graph_df, latest_unix)
+        week_graph_df["x"] = week_graph_df["x"] * 1000
         await self.writer.write_df(week_graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
         buffer = StringIO()
         buffer.write(pct)
