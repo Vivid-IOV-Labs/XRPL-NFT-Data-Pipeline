@@ -19,6 +19,8 @@ if __name__ == "__main__":
     parser.add_argument("--command_type", required=True, help="Command type to run. Accepts `scripts` or `pipeline`.")
     parser.add_argument("--env", required=True, help="Path to the env file to use for the command.")
     parser.add_argument("--script", help="Specific script to run.")
+    parser.add_argument("--trigger", help="Specific Trigger to operate on")
+    parser.add_argument("--trigger_action", help="Action to perform on the trigger")
     parser.add_argument("--stage", help="Pipeline stage to run.")
     args = parser.parse_args()
 
@@ -100,5 +102,43 @@ if __name__ == "__main__":
             runner.run()
         else:
             logger.error("Invalid Pipeline stage.")
+    elif command_type == 'trigger':
+        from scripts import TriggerRunner
+
+        trigger = args.trigger
+        action = args.trigger_action
+
+        # Trigger runner Arguments
+        kwargs = {
+            "create_script": "",
+            "function_script": "",
+            "table_script": "",
+            "create_table": True
+        }
+
+        # Populate the necessary arguments
+        if trigger == "price-summary":
+            kwargs['create_script'] = "sql/triggers/price-summary-update.sql"
+            kwargs['function_script'] = "sql/functions/update-token-price-summary.sql"
+            kwargs['table_script'] = "sql/tables/nft-price-summary.sql"
+        elif trigger == "volume-summary":
+            kwargs['create_script'] = "sql/triggers/update-nft-volume-summary.sql"
+            kwargs['function_script'] = "sql/functions/update-nft-volume-summary.sql"
+            kwargs['table_script'] = "sql/tables/nft-volume-summary.sql"
+        elif trigger == "nft-burn-offer":
+            kwargs['create_script'] = "sql/triggers/update-burn-offer-hash.sql"
+            kwargs['function_script'] = "sql/functions/update-burn-offer-hash.sql"
+            kwargs['create_table'] = False
+        elif trigger == "nft-sales":
+            kwargs['create_script'] = "sql/triggers/update-nft-sales.sql"
+            kwargs['function_script'] = "sql/functions/update-nft-sales.sql"
+            kwargs['table_script'] = "sql/tables/nft-sales.sql"
+        else:
+            logger.error("Invalid Trigger Type")
+            exit(1)
+
+        # Run the Trigger
+        runner = TriggerRunner(factory, logger)
+        runner.run(action=action, **kwargs)
     else:
         logger.error("Invalid Command Type")

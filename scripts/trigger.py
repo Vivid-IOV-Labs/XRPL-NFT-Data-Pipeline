@@ -33,15 +33,3 @@ class TriggerRunner:
 
     def run(self, action: str, **kwargs):
         asyncio.run(self._run(action, **kwargs))
-
-
-if __name__ == "__main__":
-    args = sys.argv
-    if args[1] == "price-summary":
-        asyncio.run(nft_pricing_summary("create"))
-    elif args[1] == "volume-summary":
-        asyncio.run(nft_volume_summary("create"))
-    elif args[1] == "nft-burn-offer":
-        asyncio.run(nft_burn_offer("create"))
-    elif args[1] == "nft-sales":
-        asyncio.run(nft_sales("create"))
