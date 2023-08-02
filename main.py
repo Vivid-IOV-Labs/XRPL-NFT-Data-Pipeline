@@ -1,19 +1,8 @@
 import asyncio
 import logging
-import sys
 import argparse
-import time
 
 from utilities import Factory, Config
-
-logger = logging.getLogger("app_log")
-formatter = logging.Formatter(
-    "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
-)  # noqa
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-logger.setLevel(logging.INFO)
 
 
 if __name__ == "__main__":
@@ -32,6 +21,16 @@ if __name__ == "__main__":
     parser.add_argument("--script", help="Specific script to run.")
     parser.add_argument("--stage", help="Pipeline stage to run.")
     args = parser.parse_args()
+
+    # Initialize Logger
+    logger = logging.getLogger("app_log")
+    formatter = logging.Formatter(
+        "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
+    )  # noqa
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logger.setLevel(logging.INFO)
 
     # Extract the CLI Arguments
     command_type = args.command_type
