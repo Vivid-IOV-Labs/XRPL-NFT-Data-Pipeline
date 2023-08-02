@@ -7,7 +7,7 @@ import time
 from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
                         NFTokenDump, TaxonPriceGraph, TableDump, TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph)
 from utilities import Factory, Config
-from scripts import XRPAmountUpdate
+from scripts import XRPAmountUpdate, CreateOfferDump
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -50,6 +50,9 @@ if __name__ == "__main__":
     if command_type == 'scripts':
         if script == 'amount-update':
             runner = XRPAmountUpdate(factory)
+            runner.run()
+        elif script == 'create-offer-dump':
+            runner = CreateOfferDump(logger)
             runner.run()
         else:
             logger.error("Invalid Script")
