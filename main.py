@@ -4,10 +4,7 @@ import sys
 import argparse
 import time
 
-from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
-                        NFTokenDump, TaxonPriceGraph, TableDump, TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph)
 from utilities import Factory, Config
-from scripts import XRPAmountUpdate, CreateOfferDump
 
 logger = logging.getLogger("app_log")
 formatter = logging.Formatter(
@@ -48,15 +45,27 @@ if __name__ == "__main__":
 
     # Execute the command
     if command_type == 'scripts':
+        from scripts import XRPAmountUpdate, CreateOfferDump, NixerOfferLoader
+
         if script == 'amount-update':
             runner = XRPAmountUpdate(factory)
             runner.run()
         elif script == 'create-offer-dump':
             runner = CreateOfferDump(logger)
             runner.run()
+        elif script == 'nixer-offer-loader':
+            runner = NixerOfferLoader(factory, logger)
+            runner.run()
         else:
             logger.error("Invalid Script")
     elif command_type == 'pipeline':
+        from sls_lambda import (
+            CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
+            NFTokenDump, TaxonPriceGraph, TableDump,
+            TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph
+
+        )
+
         if stage == 'token-dump':
             runner = NFTokenDump(factory)
             runner.run()
@@ -94,13 +103,3 @@ if __name__ == "__main__":
             logger.error("Invalid Pipeline stage.")
     else:
         logger.error("Invalid Command Type")
-    # section = sys.argv[1]
-    # start = time.time()
-
-
-
-    # else:
-    #     logger.info(
-    #         "Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`"
-    #     )
-    # logger.info(f"Executed in {time.time() - start}")
