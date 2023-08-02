@@ -42,44 +42,60 @@ if __name__ == "__main__":
     stage = args.stage
     env_path = args.env
 
+    # Create Config and Factory for the command
+    config = Config.from_env(env_path)
+    factory = Factory(config)
 
+    # Execute the command
+    if command_type == 'scripts':
+        if script == 'amount-update':
+            runner = XRPAmountUpdate(factory)
+            runner.run()
+        else:
+            logger.error("Invalid Script")
+    elif command_type == 'pipeline':
+        if stage == 'token-dump':
+            runner = NFTokenDump(factory)
+            runner.run()
+        elif stage == 'taxon-dump':
+            runner = NFTaxonDump(factory)
+            runner.run()
+        elif stage == "issuer-pricing":
+            runner = IssuerPriceDump(factory)
+            asyncio.run(runner.run())
+        elif stage == "taxon-pricing":
+            runner = TaxonPriceDump(factory)
+            runner.run()
+        elif stage == "csv-dump":
+            runner = CSVDump(factory)
+            runner.run()
+        elif stage == "table-dump":
+            runner = TableDump(factory)
+            runner.sync_run()
+        elif stage == "graph-dump":
+            runner = GraphDumps(factory)
+            runner.run()
+        elif stage == "taxon-price-graph":
+            runner = TaxonPriceGraph(factory)
+            asyncio.run(runner.run())
+        elif stage == "twitter-dump":
+            runner = TwitterDump(factory)
+            runner.run()
+        elif stage == "sales-dump":
+            runner = NFTSalesDump(factory)
+            runner.run()
+        elif stage == "sales-graph":
+            runner = NFTSalesGraph(factory)
+            runner.run()
+        else:
+            logger.error("Invalid Pipeline stage.")
+    else:
+        logger.error("Invalid Command Type")
     # section = sys.argv[1]
     # start = time.time()
 
 
-    # if section == "token-dump":
-    #     runner = NFTokenDump(factory)
-    #     runner.run()
-    # elif section == "taxon-dump":
-    #     runner = NFTaxonDump(factory)
-    #     runner.run()
-    # elif section == "issuer-pricing":
-    #     runner = IssuerPriceDump(factory)
-    #     asyncio.run(runner.run())
-    # elif section == "taxon-pricing":
-    #     runner = TaxonPriceDump(factory)
-    #     runner.run()
-    # elif section == "csv-dump":
-    #     runner = CSVDump(factory)
-    #     runner.run()
-    # elif section == "table-dump":
-    #     runner = TableDump(factory)
-    #     runner.sync_run()
-    # elif section == "graph-dump":
-    #     runner = GraphDumps(factory)
-    #     runner.run()
-    # elif section == "taxon-price-graph":
-    #     runner = TaxonPriceGraph(factory)
-    #     asyncio.run(runner.run())
-    # elif section == "twitter-dump":
-    #     runner = TwitterDump(factory)
-    #     runner.run()
-    # elif section == "sales-dump":
-    #     runner = NFTSalesDump(factory)
-    #     runner.run()
-    # elif section == "sales-graph":
-    #     runner = NFTSalesGraph(factory)
-    #     runner.run()
+
     # else:
     #     logger.info(
     #         "Invalid Option. Available options are `token-dump, taxon-dump, taxon-pricing, issuer-pricing, table-dump`"
