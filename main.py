@@ -133,6 +133,9 @@ if __name__ == "__main__":
             kwargs['create_script'] = "sql/triggers/update-nft-sales.sql"
             kwargs['function_script'] = "sql/functions/update-nft-sales.sql"
             kwargs['table_script'] = "sql/tables/nft-sales.sql"
+        elif trigger == "nft-offer-currency":
+            kwargs['create_script'] = "sql/triggers/create_offer_currency.sql"
+            kwargs['function_script'] = "sql/functions/add_new_offer_currency.sql"
         else:
             logger.error("Invalid Trigger Type")
             exit(1)
