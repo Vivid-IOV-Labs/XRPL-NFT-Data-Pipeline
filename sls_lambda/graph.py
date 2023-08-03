@@ -96,6 +96,13 @@ class GraphDumps(BaseLambdaRunner):
                     f"xls20/latest/{col}_Graph_Month.json",
                     "json"
                 )
+            elif col == "Holder_Count":
+                day_df = get_day_df(df, 24)
+                await self.writer.write_df(
+                    day_df,
+                    f"xls20/latest/{col}_Graph.json",
+                    "json"
+                )
             else:
                 week_df = get_day_df(df, 168)
                 await self.writer.write_df(
@@ -207,7 +214,7 @@ class NFTSalesGraph(BaseLambdaRunner):
         sales_df["x"] = sales_df["timestamp"]
         sales_df["y"] = sales_df["sales"]
         graph_df = sales_df[["x", "y"]]
-        week_graph_df = get_weekly_df(graph_df, 168)
+        week_graph_df = get_weekly_df(graph_df, 24)
         pct = get_pct(graph_df, latest_unix)
         week_graph_df["x"] = week_graph_df["x"] * 1000
         await self.writer.write_df(week_graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
