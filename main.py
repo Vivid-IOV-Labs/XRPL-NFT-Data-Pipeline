@@ -62,7 +62,7 @@ if __name__ == "__main__":
     elif command_type == 'pipeline':
         from sls_lambda import (
             CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump,
-            NFTokenDump, TaxonPriceGraph, TableDump,
+            NFTokenDump, TaxonPriceGraph, TableDump, OfferCurrencyPriceUpdate,
             TwitterDump, TaxonPriceDump, NFTSalesDump, NFTSalesGraph
 
         )
@@ -99,6 +99,9 @@ if __name__ == "__main__":
             runner.run()
         elif stage == "sales-graph":
             runner = NFTSalesGraph(factory)
+            runner.run()
+        elif stage == "offer-currency":
+            runner = OfferCurrencyPriceUpdate(factory)
             runner.run()
         else:
             logger.error("Invalid Pipeline stage.")

@@ -1,11 +1,14 @@
 import asyncio
+import aiohttp
 import datetime
 import logging
+import json
 
 from billiard.pool import Pool
 
 
 from .base import BaseLambdaRunner
+from utilities import chunks
 
 logger = logging.getLogger("app_log")
 
@@ -119,3 +122,63 @@ class IssuerPriceDump(PricingLambdaRunner):
         issuers = self.factory.supported_issuers
         prices = await self._get_issuers_pricing(issuers)
         await asyncio.gather(*[self._dump_issuer_prices(pricing) for pricing in prices])
+
+class OfferCurrencyPriceUpdate(BaseLambdaRunner):
+    async def _fetch_offer_currencies(self):
+        pool = await self.db_client.create_db_pool()
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT currency, issuer FROM nft_offer_currency;"
+                )
+                result = await cursor.fetchall()
+            connection.close()
+        return result
+
+    async def _get_price(self, currency: str, issuer: str):  # noqa
+        async with aiohttp.ClientSession() as session:  # noqa
+            try:
+                decoded_currency = bytes.fromhex(currency).decode('utf-8').replace("\x00", "")
+            except ValueError:
+                decoded_currency = currency
+            url = f"https://api.onthedex.live/public/v1/ticker/{decoded_currency}.{issuer}:XRP"
+            async with session.get(url) as response:  # noqa
+                if response.status == 200:
+                    content = await response.content.read()
+                    to_dict = json.loads(content)
+                    xrpl_quote = to_dict["pairs"]
+                    if xrpl_quote:
+                        return currency, xrpl_quote[0]["price_mid"]
+                    return currency, 0
+                else:
+                    content = await response.content.read()
+                    logger.error(f"Error Fetching Price: {content}")
+                    return currency, 0
+
+    async def _get_prices(self, currencies):
+        prices = []
+        for chunk in chunks(currencies, 5):
+            chunk_prices = await asyncio.gather(*[self._get_price(currency, issuer) for currency, issuer in chunk])
+            prices.extend(chunk_prices)
+        return prices
+
+    async def _update_price(self, price):
+        db_client = self.factory.get_db_client(write_proxy=True)
+        currency, xrp_amount = price
+        last_updated = datetime.datetime.utcnow().isoformat()
+        pool = await db_client.create_db_pool()
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    f"UPDATE nft_offer_currency SET last_updated = '{last_updated}', xrp_amount = {xrp_amount} WHERE currency = '{currency}';"
+                )
+            connection.close()
+
+    async def _run(self):
+        currencies = await self._fetch_offer_currencies()
+        prices = await self._get_prices(currencies)
+        for price in prices:
+            await self._update_price(price)
+
+    def run(self) -> None:
+        asyncio.run(self._run())
