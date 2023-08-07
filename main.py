@@ -12,8 +12,8 @@ if __name__ == "__main__":
         description='''
         Management Command for Peerkat's XLS20 Pipelines and Scripts.
         Samples:
-            python main.py --command_type=scripts --script=amount_update
-            python main.py --command_type=pipeline --stage=token-dump
+            python main.py --command_type=scripts --script=amount_update --env=env/.env.local
+            python main.py --command_type=pipeline --stage=token-dump --env=env/.env.local
         '''
     )
     parser.add_argument("--command_type", required=True, help="Command type to run. Accepts `scripts` or `pipeline`.")

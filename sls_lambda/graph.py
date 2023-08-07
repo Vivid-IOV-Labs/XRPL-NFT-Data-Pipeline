@@ -98,9 +98,15 @@ class GraphDumps(BaseLambdaRunner):
                 )
             elif col == "Holder_Count":
                 day_df = get_day_df(df, 24)
+                week_df = get_weekly_df(df, 168)
                 await self.writer.write_df(
                     day_df,
                     f"xls20/latest/{col}_Graph.json",
+                    "json"
+                )
+                await self.writer.write_df(
+                    week_df,
+                    f"xls20/latest/{col}_Graph_Week.json",
                     "json"
                 )
             else:
@@ -214,10 +220,13 @@ class NFTSalesGraph(BaseLambdaRunner):
         sales_df["x"] = sales_df["timestamp"]
         sales_df["y"] = sales_df["sales"]
         graph_df = sales_df[["x", "y"]]
-        week_graph_df = get_weekly_df(graph_df, 24)
+        day_df = get_day_df(graph_df, 24)
+        week_df = get_weekly_df(graph_df, 168)
         pct = get_pct(graph_df, latest_unix)
-        week_graph_df["x"] = week_graph_df["x"] * 1000
-        await self.writer.write_df(week_graph_df, "xls20/latest/Sales_Count_Graph.json", "json")
+        week_df["x"] = week_df["x"] * 1000
+        day_df["x"] = day_df["x"] * 1000
+        await self.writer.write_df(day_df, "xls20/latest/Sales_Count_Graph.json", "json")
+        await self.writer.write_df(week_df, "xls20/latest/Sales_Count_Graph_Week.json", "json")
         buffer = StringIO()
         buffer.write(pct)
         s3 = get_s3_resource(self.factory.config)
