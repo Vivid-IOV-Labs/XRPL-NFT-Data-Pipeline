@@ -1,4 +1,6 @@
 import asyncio
+import time
+
 import aiohttp
 import datetime
 import logging
@@ -160,6 +162,7 @@ class OfferCurrencyPriceUpdate(BaseLambdaRunner):
         for chunk in chunks(currencies, 5):
             chunk_prices = await asyncio.gather(*[self._get_price(currency, issuer) for currency, issuer in chunk])
             prices.extend(chunk_prices)
+            time.sleep(60)
         return prices
 
     async def _update_price(self, price):
