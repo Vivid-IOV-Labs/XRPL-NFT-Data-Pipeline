@@ -126,17 +126,17 @@ def read_df(filename):
 
 
 def get_pct(df, t):
-    first_record = df.head(1).to_dict(orient="list")
-    first_unix = first_record["x"][0]
-    s0 = df.loc[df["x"] == t]["y"]
-    s1 = df.loc[df["x"] == t - 24 * 60 * 60]["y"]
-    s2 = df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"]
-    s3 = df.loc[df["x"] == first_unix]["y"]
+    first_record = df.iloc[0].to_dict()
+    last_record = df.iloc[-1].to_dict()
+    current_value = last_record['y']
+    day_ago = df.loc[df["x"] == t - 24 * 60 * 60]["y"]
+    week_ago = df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"]
+    first_value = first_record['y'] # Currently month ago
 
-    t0 = float(s0) if s0.any() else 0
-    t1 = float(s1) if s1.any() else 0
-    t2 = float(s2) if s2.any() else 0
-    t3 = float(s3) if s3.any() else 0
+    t0 = float(current_value)
+    t1 = float(day_ago)
+    t2 = float(week_ago)
+    t3 = float(first_value)
 
     pct_dic = {
         "currentValue": t0,
@@ -152,6 +152,11 @@ def get_pct(df, t):
                 "directionOfChange": int(np.sign(t0 - t2)),
             },
             "month": {
+                "valueDifference": t0 - t3,
+                "percentageChange": (t0 - t3) / (t3 * 100) if t3 else 0.01,
+                "directionOfChange": int(np.sign(t0 - t3)),
+            },
+            "all": {
                 "valueDifference": t0 - t3,
                 "percentageChange": (t0 - t3) / (t3 * 100) if t3 else 0.01,
                 "directionOfChange": int(np.sign(t0 - t3)),
