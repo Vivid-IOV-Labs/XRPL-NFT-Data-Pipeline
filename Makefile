@@ -32,3 +32,8 @@ load-nixer:
 airflow-server:
 	ssh -i ${AIRFLOW_SERVER_ACCESS_KEY} ${AIRFLOW_SERVER}
 
+ecr-update:
+	docker build . --tag peerkat-airflow:latest
+	docker tag peerkat-airflow:latest 366877760811.dkr.ecr.eu-west-2.amazonaws.com/peerkat-airflow:latest
+	aws ecr get-login-password --region eu-west-2 --profile peerkat | docker login --username AWS --password-stdin 366877760811.dkr.ecr.eu-west-2.amazonaws.com
+	docker push 366877760811.dkr.ecr.eu-west-2.amazonaws.com/peerkat-airflow:latest
