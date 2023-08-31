@@ -22,6 +22,8 @@ if __name__ == "__main__":
     parser.add_argument("--trigger", help="Specific Trigger to operate on")
     parser.add_argument("--trigger_action", help="Action to perform on the trigger")
     parser.add_argument("--stage", help="Pipeline stage to run.")
+    parser.add_argument("--endpoint", help="API endpoint to call.")
+    parser.add_argument("--token_id", help="nft token id.")
     args = parser.parse_args()
 
     # Initialize Logger
@@ -36,6 +38,7 @@ if __name__ == "__main__":
 
     # Extract the CLI Arguments
     command_type = args.command_type
+    endpoint = args.endpoint
     script = args.script
     stage = args.stage
     env_path = args.env
@@ -146,5 +149,19 @@ if __name__ == "__main__":
         # Run the Trigger
         runner = TriggerRunner(factory, logger)
         runner.run(action=action, **kwargs)
+    elif command_type == 'api':
+        from sls_lambda import TokenHistoryFetcher
+
+        token_id = args.token_id
+        if token_id is None:
+            logger.error('Token id required')
+            exit(1)
+        if endpoint == 'token-history':
+            fetcher = TokenHistoryFetcher(factory)
+            response = fetcher.fetch_history(token_id)
+            # for data in response:
+            #     print(data['action'])
+        else:
+            logger.error('Invalid endpoint')
     else:
         logger.error("Invalid Command Type")
