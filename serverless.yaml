@@ -72,6 +72,12 @@ functions:
     handler: sls_lambda/handlers.graph_dump
     name: nft-graph-dump-${sls:stage}
     timeout: 900
+  token-history:
+    handler: handlers.token_history
+    events:
+      - httpApi:
+          path: /token-history/{token_id}
+          method: get
 #  nft-twitter-dump:
 #    handler: sls_lambda/handlers.twitter_dump
 #    name: nft-twitter-dump-${sls:stage}

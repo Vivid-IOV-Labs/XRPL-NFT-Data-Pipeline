@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump)
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump, TokenHistoryFetcher)
 from sls_lambda.invokers import (invoke_graph_dump, invoke_table_dump)
 from utilities import Factory, Config
 
@@ -60,3 +60,12 @@ def graph_dump(event, context):
     factory = Factory(config)
     runner = GraphDumps(factory)
     runner.run()
+
+
+def token_history(event, context):
+    token_id = event['pathParameters']['token_id']
+    config = Config.from_env()
+    factory = Factory(config)
+    fetcher = TokenHistoryFetcher(factory)
+    response = fetcher.fetch_history(token_id)
+    return response
