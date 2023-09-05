@@ -93,5 +93,5 @@ class TokenHistoryFetcher(BaseLambdaRunner):
                 history.append(cancel_offer_action)
             if burn_offer_action.get("account") is not None:
                 history.append(burn_offer_action)
-        history = sorted(history, key=lambda action: action['date'])
+        history = sorted(history, key=lambda action: action['date'], reverse=True)
         return history

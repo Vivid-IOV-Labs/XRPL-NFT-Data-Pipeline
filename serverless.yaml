@@ -75,7 +75,6 @@ functions:
   token-history:
     handler: sls_lambda/handlers.token_history
     name: nft-token-history-${sls:stage}
-    timeout: 600
     events:
       - httpApi:
           path: /token-history/{token_id}
