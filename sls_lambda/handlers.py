@@ -70,10 +70,10 @@ def token_history(event, context):
     response = fetcher.fetch_history(token_id)
     return response
 
-def address_nfts(event, context):
-    address = event['pathParameters']['address']
-    config = Config.from_env()
-    factory = Factory(config)
-    fetcher = AddressNFTS(factory)
-    response = fetcher.fetch(address)
-    return response
+# def address_nfts(event, context):
+#     address = event['pathParameters']['address']
+#     config = Config.from_env()
+#     factory = Factory(config)
+#     fetcher = AddressNFTS(factory)
+#     response = fetcher.fetch(address)
+#     return response
