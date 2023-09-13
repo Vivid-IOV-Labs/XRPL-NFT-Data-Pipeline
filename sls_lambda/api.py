@@ -99,10 +99,11 @@ class TokenHistoryFetcher(BaseLambdaRunner):
 
 
 class TokenOwnershipHistory(BaseLambdaRunner):
+    per_page = 10
     def run(self) -> None:
         pass
 
-    async def _get_account_accept_offers(self, address: str, limit: int):
+    async def _get_account_accept_offers(self, address: str, offset: int):
         db_client = self.factory.get_db_client()
         pool = await db_client.create_db_pool()  # noqa
         async with pool.acquire() as connection:
@@ -113,7 +114,7 @@ class TokenOwnershipHistory(BaseLambdaRunner):
                     f"nft_buy_sell_offers.is_sell_offer FROM nft_accept_offer "
                     f"FULL OUTER JOIN nft_buy_sell_offers ON nft_buy_sell_offers.accept_offer_hash = nft_accept_offer."
                     f"hash WHERE nft_token_id is not NULL AND nft_accept_offer.account = "
-                    f"'{address}' LIMIT {limit}")
+                    f"'{address}' LIMIT {self.per_page} OFFSET {offset}")
                 await cursor.execute(query)
                 result = await cursor.fetchall()
             connection.close()
@@ -126,7 +127,7 @@ class TokenOwnershipHistory(BaseLambdaRunner):
             'is_sell_offer': offer[7]
         } for offer in result], key=lambda offer: offer['timestamp'])
 
-    async def fetch_history(self, address: str, limit: int):
+    async def fetch_history(self, address: str, offset: int):
         """
         WIP
 
@@ -140,10 +141,10 @@ class TokenOwnershipHistory(BaseLambdaRunner):
 
         This function looks to cover these 4 possible scenarios(open to extension in the future) in the most efficient way.
         :param address: XRPL Address
-        :param limit: DB Query Limit for pagination
+        :param offset: DB Query Limit for pagination
         :return: history of current and past nfts held by an address
         """
-        accept_offers = await self._get_account_accept_offers(address, limit)
+        accept_offers = await self._get_account_accept_offers(address, offset)
         history = {}
         for offer in accept_offers:
             token_id = offer['token_id']
