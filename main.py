@@ -24,6 +24,8 @@ if __name__ == "__main__":
     parser.add_argument("--stage", help="Pipeline stage to run.")
     parser.add_argument("--endpoint", help="API endpoint to call.")
     parser.add_argument("--token_id", help="nft token id.")
+    parser.add_argument("--address", help="xrpl address.")
+    parser.add_argument("--page", help="for pagination")
     args = parser.parse_args()
 
     # Initialize Logger
@@ -155,19 +157,21 @@ if __name__ == "__main__":
         token_id = args.token_id
         address = args.address
         page = args.page if args.page else 0
-        if token_id is None:
-            logger.error('Token id required')
-            exit(1)
         if endpoint == 'token-history':
+            if token_id is None:
+                logger.error('Token id required')
+                exit(1)
             fetcher = TokenHistoryFetcher(factory)
             response = fetcher.fetch_history(token_id)
             # for data in response:
             #     print(data['action'])
         if endpoint == "token-held-history":
+            if address is None:
+                logger.error('Address required')
+                exit(1)
             # Page starts from zero
             fetcher = TokenOwnershipHistory(factory)
             response = fetcher.fetch_history(address, page)
-            __import__("ipdb").set_trace()
         else:
             logger.error('Invalid endpoint')
     else:
