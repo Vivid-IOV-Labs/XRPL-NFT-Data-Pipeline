@@ -127,7 +127,7 @@ class TokenOwnershipHistory(BaseLambdaRunner):
             'is_sell_offer': offer[7]
         } for offer in result], key=lambda offer: offer['timestamp'])
 
-    async def fetch_history(self, address: str, offset: int):
+    def fetch_history(self, address: str, offset: int):
         """
         WIP
 
@@ -144,7 +144,7 @@ class TokenOwnershipHistory(BaseLambdaRunner):
         :param offset: DB Query Limit for pagination
         :return: history of current and past nfts held by an address
         """
-        accept_offers = await self._get_account_accept_offers(address, offset)
+        accept_offers = asyncio.run(self._get_account_accept_offers(address, offset))
         history = {}
         for offer in accept_offers:
             token_id = offer['token_id']
@@ -153,7 +153,7 @@ class TokenOwnershipHistory(BaseLambdaRunner):
             if offer['is_sell_offer']:
                 # Accepted A sell offer [ Becomes the token owner ]
                 history[token_id] = {
-                    'hold_start': accepted_at,
+                    'hold_start': int(accepted_at.timestamp()),
                     'hold_end': None,
                     'previous_owner': created_by,
                     'new_owner': address
@@ -162,8 +162,9 @@ class TokenOwnershipHistory(BaseLambdaRunner):
             else:
                 # Accepts A Buy Offer [ Sells token to another account ]
                 if token_id in history:
-                    history[token_id]['hold_end'] = accepted_at  # noqa
+                    history[token_id]['hold_end'] = int(accepted_at.timestamp())  # noqa
                     history[token_id]['previous_owner'] = address
                     history[token_id]['new_owner'] = created_by
                     # print(f"Sold token {token_id} to {created_by} at {accepted_at}")
-        return history
+        return [{'token_id': token_id, **history[token_id]} for token_id in history]
+        #return history
