@@ -1,5 +1,5 @@
 import asyncio
-import requests
+from datetime import datetime
 
 from .base import BaseLambdaRunner
 from typing import Tuple
@@ -97,3 +97,72 @@ class TokenHistoryFetcher(BaseLambdaRunner):
         history = sorted(history, key=lambda action: action['date'], reverse=True)
         return history
 
+
+class TokenOwnershipHistory(BaseLambdaRunner):
+    def run(self) -> None:
+        pass
+
+    async def _get_account_accept_offers(self, address: str, limit: int):
+        db_client = self.factory.get_db_client()
+        pool = await db_client.create_db_pool()  # noqa
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                query = (
+                    f"SELECT nft_accept_offer.account, nft_accept_offer.date, nft_accept_offer.hash, nft_accept_offer."
+                    f"sell_offer, nft_accept_offer.buy_offer, nft_buy_sell_offers.nft_token_id, nft_buy_sell_offers.account as offer_creator, "
+                    f"nft_buy_sell_offers.is_sell_offer FROM nft_accept_offer "
+                    f"FULL OUTER JOIN nft_buy_sell_offers ON nft_buy_sell_offers.accept_offer_hash = nft_accept_offer."
+                    f"hash WHERE nft_token_id is not NULL AND nft_accept_offer.account = "
+                    f"'{address}' LIMIT {limit}")
+                await cursor.execute(query)
+                result = await cursor.fetchall()
+            connection.close()
+        return sorted([{
+            'account': offer[0],
+            'timestamp': int(offer[1]) + 946684800,
+            'hash': offer[2],
+            'token_id': offer[5],
+            'created_by': offer[6],
+            'is_sell_offer': offer[7]
+        } for offer in result], key=lambda offer: offer['timestamp'])
+
+    async def fetch_history(self, address: str, limit: int):
+        """
+        WIP
+
+        This method gets the history of token held by an address. The period the token was held for and who the new owner is.
+        There are various scenarios to take into account which might lead to ownership or transfer of tokens.
+        1. Accepting a sell offer created by another token owner transfers the token to the accepting address(the address arg)
+        2. Accepting a buy offer created by another account would indicate end of ownership of such tokens. Transfers the token to the address
+           that created the buy offer.
+        3. If a token owner creates a sell offer and the sell offer gets accepted by another account, it also indicates transfer/end of ownership of such token.
+        4. If the account of interest(argument) creates a buy offer for another token and the buy offer gets accepted, this indicates beginning of ownership.
+
+        This function looks to cover these 4 possible scenarios(open to extension in the future) in the most efficient way.
+        :param address: XRPL Address
+        :param limit: DB Query Limit for pagination
+        :return: history of current and past nfts held by an address
+        """
+        accept_offers = await self._get_account_accept_offers(address, limit)
+        history = {}
+        for offer in accept_offers:
+            token_id = offer['token_id']
+            accepted_at = datetime.fromtimestamp(offer['timestamp'])
+            created_by = offer['created_by']
+            if offer['is_sell_offer']:
+                # Accepted A sell offer [ Becomes the token owner ]
+                history[token_id] = {
+                    'hold_start': accepted_at,
+                    'hold_end': None,
+                    'previous_owner': created_by,
+                    'new_owner': address
+                }
+                # print(f"Bought token {token_id} at {accepted_at} from {created_by}")
+            else:
+                # Accepts A Buy Offer [ Sells token to another account ]
+                if token_id in history:
+                    history[token_id]['hold_end'] = accepted_at  # noqa
+                    history[token_id]['previous_owner'] = address
+                    history[token_id]['new_owner'] = created_by
+                    # print(f"Sold token {token_id} to {created_by} at {accepted_at}")
+        return history
