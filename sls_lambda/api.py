@@ -97,18 +97,3 @@ class TokenHistoryFetcher(BaseLambdaRunner):
         history = sorted(history, key=lambda action: action['date'], reverse=True)
         return history
 
-
-class AddressNFTS(BaseLambdaRunner):
-    def run(self) -> None:
-        pass
-
-    def _get_address_nfts(self, address: str):
-        url = f"https://bithomp.com/api/v2/nfts?owner={address}"
-        headers = {
-            "x-bithomp-token": self.factory.config.BITHOMP_TOKEN
-        }
-        response = requests.get(url, headers=headers)
-        return response.json()['nfts']
-
-    def fetch(self, address: str):
-        return self._get_address_nfts(address)
