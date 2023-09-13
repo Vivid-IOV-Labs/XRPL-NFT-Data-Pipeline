@@ -72,7 +72,7 @@ def token_history(event, context):
 
 def token_held_history(event, context):
     address = event['queryStringParameters']['address']
-    page = event['queryStringParameters']['page']
+    page = event['queryStringParameters'].get('page', 0)
     config = Config.from_env()
     factory = Factory(config)
     fetcher = TokenOwnershipHistory(factory)
