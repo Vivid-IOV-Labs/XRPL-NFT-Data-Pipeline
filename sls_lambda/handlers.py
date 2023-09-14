@@ -72,9 +72,10 @@ def token_history(event, context):
 
 def token_held_history(event, context):
     address = event['queryStringParameters']['address']
-    page = event['queryStringParameters'].get('page', 0)
+    page_num = event['queryStringParameters'].get('page', 1)
+    offset = (page_num - 1) * 10
     config = Config.from_env()
     factory = Factory(config)
     fetcher = TokenOwnershipHistory(factory)
-    response = fetcher.fetch_history(address, page)
+    response = fetcher.fetch_history(address, offset)
     return response
