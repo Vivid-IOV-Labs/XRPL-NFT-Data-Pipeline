@@ -73,6 +73,8 @@ def token_history(event, context):
 def token_held_history(event, context):
     address = event['queryStringParameters']['address']
     page_num = event['queryStringParameters'].get('page', 1)
+    if page_num <= 0:
+        return {"statusCode": 400, "body": "invalid page number"}
     offset = (page_num - 1) * 10
     config = Config.from_env()
     factory = Factory(config)
