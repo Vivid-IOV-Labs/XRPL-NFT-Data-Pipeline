@@ -86,6 +86,13 @@ functions:
       - httpApi:
           path: /token-held-history
           method: get
+  account-nfts:
+    handler: sls_lambda/handlers.account_nfts
+    name: account-nfts-${sls:stage}
+    events:
+      - httpApi:
+          path: /account-nfts/{address}
+          method: get
 #  nft-twitter-dump:
 #    handler: sls_lambda/handlers.twitter_dump
 #    name: nft-twitter-dump-${sls:stage}
