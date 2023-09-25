@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump, TokenHistoryFetcher, TokenOwnershipHistory, AccountNFTS)
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump, TokenHistoryFetcher, AccountActivity, AccountNFTS)
 from sls_lambda.invokers import (invoke_graph_dump, invoke_table_dump)
 from utilities import Factory, Config
 
@@ -78,8 +78,8 @@ def account_activity(event, context):
     offset = (page_num - 1) * 10
     config = Config.from_env()
     factory = Factory(config)
-    fetcher = TokenOwnershipHistory(factory)
-    response = fetcher.fetch_history(address, offset)
+    fetcher = AccountActivity(factory)
+    response = fetcher.fetch_activity(address, offset)
     return response
 
 def account_nfts(event, context):

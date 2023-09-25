@@ -115,7 +115,7 @@ class AccountActivity(BaseLambdaRunner):
             connection.close()
         return result
 
-    def fetch_history(self, address: str, offset: int):
+    def fetch_activity(self, address: str, offset: int):
         """
         :param address: XRPL Address
         :param offset: DB Query Limit for pagination
