@@ -79,12 +79,12 @@ functions:
       - httpApi:
           path: /token-history/{token_id}
           method: get
-  token-held-history:
-    handler: sls_lambda/handlers.token_held_history
-    name: token-held-history-${sls:stage}
+  account-activity:
+    handler: sls_lambda/handlers.account_activity
+    name: account-activity-${sls:stage}
     events:
       - httpApi:
-          path: /token-held-history
+          path: /account-activity
           method: get
   account-nfts:
     handler: sls_lambda/handlers.account_nfts
