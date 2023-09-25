@@ -84,7 +84,7 @@ def token_held_history(event, context):
 
 def account_nfts(event, context):
     address = event['pathParameters']['address']
-    page_num = event.get['queryStringParameters'].get('page', 1)
+    page_num = event.get('queryStringParameters', {}).get('page', 1)
     if page_num <= 0:
         return {"statusCode": 400, "body": "invalid page number"}
     offset = (page_num - 1) * 10
