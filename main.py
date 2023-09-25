@@ -152,7 +152,7 @@ if __name__ == "__main__":
         runner = TriggerRunner(factory, logger)
         runner.run(action=action, **kwargs)
     elif command_type == 'api':
-        from sls_lambda import TokenHistoryFetcher, TokenOwnershipHistory
+        from sls_lambda import TokenHistoryFetcher, TokenOwnershipHistory, AccountNFTS
 
         token_id = args.token_id
         address = args.address
@@ -165,13 +165,27 @@ if __name__ == "__main__":
             response = fetcher.fetch_history(token_id)
             # for data in response:
             #     print(data['action'])
-        if endpoint == "token-held-history":
+        elif endpoint == "token-held-history":
             if address is None:
                 logger.error('Address required')
                 exit(1)
             # Page starts from zero
             fetcher = TokenOwnershipHistory(factory)
             response = fetcher.fetch_history(address, page)
+        elif endpoint == "account-nfts":
+            """
+            python main.py --command_type=api --endpoint=account-nfts --address=rJKnmyqZJgnvHiWv2SPxaNcxhp9LLW8syT --page=1 --env=env/.env.local
+            """
+            if address is None:
+                logger.error('Address required')
+                exit(1)
+            if int(page) <= 0:
+                logger.error('invalid page number')
+                exit(1)
+            offset = (int(page) - 1) * 10
+            fetcher = AccountNFTS(factory)
+            response = fetcher.fetch(address, offset)
+            print(response)
         else:
             logger.error('Invalid endpoint')
     else:
