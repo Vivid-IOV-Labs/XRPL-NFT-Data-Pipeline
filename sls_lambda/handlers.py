@@ -70,7 +70,7 @@ def token_history(event, context):
     response = fetcher.fetch_history(token_id)
     return response
 
-def token_held_history(event, context):
+def account_activity(event, context):
     address = event['queryStringParameters']['address']
     page_num = event['queryStringParameters'].get('page', 1)
     if page_num <= 0:
