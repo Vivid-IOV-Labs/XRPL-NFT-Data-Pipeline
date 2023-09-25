@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump, TokenHistoryFetcher, TokenOwnershipHistory)
+from sls_lambda import (CSVDump, GraphDumps, IssuerPriceDump, NFTaxonDump, NFTokenDump, TableDump, TokenHistoryFetcher, TokenOwnershipHistory, AccountNFTS)
 from sls_lambda.invokers import (invoke_graph_dump, invoke_table_dump)
 from utilities import Factory, Config
 
@@ -80,4 +80,16 @@ def token_held_history(event, context):
     factory = Factory(config)
     fetcher = TokenOwnershipHistory(factory)
     response = fetcher.fetch_history(address, offset)
+    return response
+
+def account_nfts(event, context):
+    address = event['queryStringParameters']['address']
+    page_num = event['queryStringParameters'].get('page', 1)
+    if page_num <= 0:
+        return {"statusCode": 400, "body": "invalid page number"}
+    offset = (page_num - 1) * 10
+    config = Config.from_env()
+    factory = Factory(config)
+    fetcher = AccountNFTS(factory)
+    response = fetcher.fetch(address, offset)
     return response
