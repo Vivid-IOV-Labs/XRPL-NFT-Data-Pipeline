@@ -98,7 +98,7 @@ class TokenHistoryFetcher(BaseLambdaRunner):
         return history
 
 
-class TokenOwnershipHistory(BaseLambdaRunner):
+class AccountActivity(BaseLambdaRunner):
     per_page = 10
     def run(self) -> None:
         pass
