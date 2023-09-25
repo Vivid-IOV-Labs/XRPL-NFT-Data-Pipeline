@@ -168,3 +168,26 @@ class TokenOwnershipHistory(BaseLambdaRunner):
                     # print(f"Sold token {token_id} to {created_by} at {accepted_at}")
         return [{'token_id': token_id, **history[token_id]} for token_id in history]
         #return history
+
+
+class AccountNFTS(BaseLambdaRunner):
+    per_page = 10
+    def run(self) -> None:
+        pass
+
+    async def _get_account_nfts(self, address: str, offset: int):
+        db_client = self.factory.get_db_client()
+        pool = await db_client.create_db_pool()  # noqa
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                query = (
+                    f"SELECT nft_current_owner.nft_token_id, nft_owner_activity.timestamp FROM nft_current_owner JOIN nft_owner_activity ON nft_current_owner.owner_activity = nft_owner_activity.id WHERE nft_current_owner.owner_address = '{address}'"
+                    f"LIMIT {self.per_page} OFFSET {offset}")
+                await cursor.execute(query)
+                result = await cursor.fetchall()
+            connection.close()
+        return result
+
+    def fetch(self, address: str, offset: int):
+        nfts = asyncio.run(self._get_account_nfts(address, offset))
+        return [{'token_id': data[0], 'acquired_at': int(data[1].timestamp())} for data in nfts]
