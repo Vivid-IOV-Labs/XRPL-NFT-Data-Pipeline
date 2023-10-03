@@ -132,10 +132,9 @@ def get_pct(df, t):
     day_ago = df.loc[df["x"] == t - 24 * 60 * 60]["y"]
     week_ago = df.loc[df["x"] == t - 7 * 24 * 60 * 60]["y"]
     first_value = first_record['y'] # Currently month ago
-
     t0 = float(current_value)
     t1 = float(day_ago)
-    t2 = float(week_ago)
+    t2 = float(week_ago) if not week_ago.empty else 0.0
     t3 = float(first_value)
 
     pct_dic = {
