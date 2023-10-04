@@ -158,6 +158,7 @@ class OfferCurrencyPriceUpdate(BaseLambdaRunner):
                     return currency, 0
 
     async def _get_prices(self, currencies):
+        print('getting prices')
         prices = []
         for chunk in chunks(currencies, 5):
             chunk_prices = await asyncio.gather(*[self._get_price(currency, issuer) for currency, issuer in chunk])
@@ -178,8 +179,12 @@ class OfferCurrencyPriceUpdate(BaseLambdaRunner):
             connection.close()
 
     async def _run(self):
+        print('starting')
         currencies = await self._fetch_offer_currencies()
+        print('fetched currencies')
+        print(currencies)
         prices = await self._get_prices(currencies)
+        print('price get complete')
         for price in prices:
             await self._update_price(price)
 
