@@ -17,3 +17,4 @@ psycopg2-2
 dags/sls_lambda
 dags/utilities
 logs/**
+accept-offer-delete*.sql
