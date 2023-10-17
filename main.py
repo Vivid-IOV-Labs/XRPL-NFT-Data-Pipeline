@@ -62,6 +62,9 @@ if __name__ == "__main__":
         elif script == 'nixer-offer-loader':
             runner = NixerOfferLoader(factory, logger)
             runner.run()
+        elif script == 'owner-activity':
+            from scripts.owner_activity import owner_activity_catchup
+            owner_activity_catchup(factory)
         else:
             logger.error("Invalid Script")
     elif command_type == 'pipeline':
