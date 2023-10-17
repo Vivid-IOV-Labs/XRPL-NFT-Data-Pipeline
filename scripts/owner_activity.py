@@ -22,12 +22,12 @@ def owner_activity_catchup(factory: Factory):
     # Fetch All Accept offers {Fetch by batch}
     start = time.monotonic()
     completed = json.load(open('data/local/owner-activity/completed.json', 'r'))
-    batch_size = 500
+    batch_size = 1000
     current_batch = completed.get('last_completed_batch', 1)
     while True:
         print('\n')
         print(f'Running For Batch {current_batch}')
-        accept_offers_query = f'SELECT hash, date, account FROM nft_accept_offer LIMIT {batch_size} offset {(current_batch - 1)*1000}'
+        accept_offers_query = f'SELECT hash, date, account FROM nft_accept_offer LIMIT {batch_size} offset {(current_batch - 1)*batch_size}'
         accept_offers = asyncio.run(execute_db_query(factory, accept_offers_query))
         if len(accept_offers) == 0:
             break
