@@ -65,6 +65,9 @@ if __name__ == "__main__":
         elif script == 'owner-activity':
             from scripts.owner_activity import owner_activity_catchup
             owner_activity_catchup(factory)
+        elif script == 'address-detail':
+            from scripts.nft_address_details import dump
+            asyncio.run(dump(config))
         else:
             logger.error("Invalid Script")
     elif command_type == 'pipeline':
