@@ -68,6 +68,9 @@ if __name__ == "__main__":
         elif script == 'address-detail':
             from scripts.nft_address_details import dump
             asyncio.run(dump(config))
+        elif script == 'offer-index':
+            from scripts.offer_index import dump
+            asyncio.run(dump())
         else:
             logger.error("Invalid Script")
     elif command_type == 'pipeline':
