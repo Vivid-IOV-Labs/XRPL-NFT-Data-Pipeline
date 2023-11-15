@@ -20,7 +20,7 @@ class TokenHistoryFetcher(BaseLambdaRunner):
 
     @staticmethod
     def _get_query(token_id: str):
-        return f"SELECT nft_buy_sell_offers.nft_token_id, nft_buy_sell_offers.account, nft_buy_sell_offers.is_sell_offer, " \
+        return f"SELECT DISTINCT nft_buy_sell_offers.nft_token_id, nft_buy_sell_offers.account, nft_buy_sell_offers.is_sell_offer, " \
                f"nft_buy_sell_offers.accept_offer_hash, nft_buy_sell_offers.cancel_offer_hash, nft_buy_sell_offers.date as " \
                f"offer_date, nft_accept_offer.account " \
                f"as accept_offer_account, nft_accept_offer.date as accept_offer_date, nft_cancel_offer.account as " \
@@ -50,9 +50,8 @@ class TokenHistoryFetcher(BaseLambdaRunner):
 
     def _get_create_offer_action(self, row: Tuple):
         return {
-            "token_id": row[0],
             "account": row[1],
-            "action": str(TokenHistoryAction.CREATE_OFFER.value),
+            "action": "CREATE_OFFER",
             "is_sell_offer": row[2],
             "date": self._format_date(row[5])
         }
@@ -61,20 +60,20 @@ class TokenHistoryFetcher(BaseLambdaRunner):
         return {
             "account": row[6],
             "date": self._format_date(row[7]),
-            "action": str(TokenHistoryAction.ACCEPT_OFFER.value)
+            "action": "ACCEPT_OFFER"
         }
 
     def _get_cancel_offer_action(self, row: Tuple):
         return {
             "account": row[8],
-            "action": str(TokenHistoryAction.CANCEL_OFFER.value),
+            "action": "CANCEL_OFFER",
             "date": self._format_date(row[9])
         }
 
     def _get_burn_offer_action(self, row: Tuple):
         return {
             "account": row[10],
-            "action": str(TokenHistoryAction.TOKEN_BURN.value),
+            "action": "TOKEN_BURN",
             "date": self._format_date(row[11])
         }
 
