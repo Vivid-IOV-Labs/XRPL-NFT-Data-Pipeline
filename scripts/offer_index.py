@@ -7,7 +7,7 @@ import asyncio
 
 from utilities import LocalFileWriter, chunks
 
-INPUT_FILE = "data/xspectar.csv"
+INPUT_FILE = "data/hashes.csv"
 XRPL_SERVERS = ['https://xrplcluster.com/', 'https://s1.ripple.com:51234/', 'https://s2.ripple.com:51234/']
 writer = LocalFileWriter()
 
@@ -44,18 +44,21 @@ async def fetch_offer_index(offer_hash: str):
 async def dump():
     offer_hashes = pd.read_csv(INPUT_FILE)["HASH"].to_list()
     final_data = []
+    # null_offer_hashes = []
     try:
-        final_data = json.load(open("data/local/offer-index/details.json", "r"))
+        final_data = json.load(open("data/local/offer-index/offer-index-details-2.json", "r"))
         fetched_index = [data['hash'] for data in final_data]
+        # null_offer_hashes = [data['hash'] for data in final_data if data['offer_index'] is None]
     except FileNotFoundError as e:
         fetched_index = []
         final_data = []
     to_fetch = list(set(offer_hashes) - set(fetched_index))
+    # print(len(null_offer_hashes), len(offer_hashes), len(final_data))
     for chunk in chunks(to_fetch, 50):
         details = await asyncio.gather(*[fetch_offer_index(address) for address in chunk])
         final_data.extend([detail for detail in details if detail is not None])
         fetched_index.extend(chunk)
-        await writer.write_json("offer-index/fetched.json", fetched_index)
-        await writer.write_json("offer-index/details.json", final_data)
+        await writer.write_json("offer-index/fetched-2.json", fetched_index)
+        await writer.write_json("offer-index/offer-index-details-2.json", final_data)
         print("sleeping for 60s ...")
         time.sleep(60)
