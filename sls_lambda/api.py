@@ -108,7 +108,7 @@ class AccountActivity(BaseLambdaRunner):
         pool = await db_client.create_db_pool()  # noqa
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                query = (f"SELECT nft_token_id, action, timestamp FROM nft_owner_activity WHERE owner_address = "
+                query = (f"SELECT DISTINCT nft_token_id, action, timestamp FROM nft_owner_activity WHERE owner_address = "
                          f"'{address}' ORDER BY timestamp DESC LIMIT {self.per_page} OFFSET {offset}")
                 await cursor.execute(query)
                 result = await cursor.fetchall()
