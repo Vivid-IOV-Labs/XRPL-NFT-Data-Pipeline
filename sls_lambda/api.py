@@ -1,5 +1,7 @@
 import asyncio
 from datetime import datetime
+import base64
+import json
 
 from .base import BaseLambdaRunner
 from typing import Tuple
@@ -94,7 +96,18 @@ class TokenHistoryFetcher(BaseLambdaRunner):
             if burn_offer_action.get("account") is not None:
                 history.append(burn_offer_action)
         history = sorted(history, key=lambda action: action['date'], reverse=True)
-        return history
+        return {
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Credentials": True,
+                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+            },
+            "statusCode": 200,
+            "body": base64.b64encode(bytes(json.dumps(history), "utf-8")).decode("utf-8"),
+            "isBase64Encoded": True
+        }
 
 
 class AccountActivity(BaseLambdaRunner):
