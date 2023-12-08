@@ -134,12 +134,24 @@ class AccountActivity(BaseLambdaRunner):
         :return: history of nft sales and acquisition
         """
         nft_activity = asyncio.run(self._get_account_activity(address, offset))
-        return [{
+        data = [{
             'account': address,
             'token_id': activity[0],
             'action': activity[1],
             'timestamp': int(activity[2].timestamp())
         } for activity in nft_activity]
+        return {
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Credentials": True,
+                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+            },
+            "statusCode": 200,
+            "body": base64.b64encode(bytes(json.dumps(data), "utf-8")).decode("utf-8"),
+            "isBase64Encoded": True
+        }
 
 
 class AccountNFTS(BaseLambdaRunner):
@@ -162,4 +174,16 @@ class AccountNFTS(BaseLambdaRunner):
 
     def fetch(self, address: str, offset: int):
         nfts = asyncio.run(self._get_account_nfts(address, offset))
-        return [{'token_id': data[0], 'acquired_at': int(data[1].timestamp())} for data in nfts]
+        data = [{'token_id': data[0], 'acquired_at': int(data[1].timestamp())} for data in nfts]
+        return {
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Credentials": True,
+                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+            },
+            "statusCode": 200,
+            "body": base64.b64encode(bytes(json.dumps(data), "utf-8")).decode("utf-8"),
+            "isBase64Encoded": True
+        }
