@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG  # noqa
-from airflow.operators.bash import BashOperator  # noqa
+from airflow.operators.bash import BashOperator, PythonOperator  # noqa
 
+def cleanup_complete():
+    print('cleanup done')
 
 default_args = {
     "owner": "peerkat",
@@ -27,4 +29,8 @@ with DAG(
         task_id='clean_scheduler_logs',
         bash_command=f"find $AIRFLOW_HOME/logs -type f -delete"
     )
-    clean_scheduler_logs
+    run_post_cleanup = PythonOperator(
+        task_id="cleanup-complete",
+        python_callable=cleanup_complete,
+    )
+    clean_scheduler_logs >> run_post_cleanup

@@ -23,6 +23,9 @@ def offer_currency_price():
     runner = OfferCurrencyPriceUpdate(factory)
     runner.run()
 
+def run_complete():
+    print('completed offer currency price job')
+
 default_args = {
     "owner": "peerkat",
     "depends_on_past": False,
@@ -45,5 +48,9 @@ with DAG(
         task_id="offer-currency-price-update",
         python_callable=offer_currency_price
     )
+    run_post_complete = PythonOperator(
+        task_id="run-complete",
+        python_callable=run_complete,
+    )
 
-    run_offer_currency_price_update  # noqa
+    run_offer_currency_price_update >> run_post_complete

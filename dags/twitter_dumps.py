@@ -23,6 +23,9 @@ def twitter_social_activity_dump():
     runner = TwitterDump(factory)
     runner.run()
 
+def run_complete():
+    print('completed twitter social activity job')
+
 default_args = {
     "owner": "peerkat",
     "depends_on_past": False,
@@ -45,5 +48,9 @@ with DAG(
         task_id="twitter-social-activity",
         python_callable=twitter_social_activity_dump
     )
+    run_post_complete = PythonOperator(
+        task_id="run-complete",
+        python_callable=run_complete,
+    )
 
-    run_taxon_price_summary
+    run_taxon_price_summary >> run_post_complete
