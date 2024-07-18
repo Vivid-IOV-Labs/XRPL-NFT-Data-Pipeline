@@ -15,21 +15,21 @@ logger.addHandler(console_handler)
 logger.setLevel(logging.INFO)
 
 
-def issuers_nft_dumps(event, context):
+def issuers_nft_dumps(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     runner = NFTokenDump(factory)
     runner.run()
 
 
-def issuers_taxon_dumps(event, context):
+def issuers_taxon_dumps(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     runner = NFTaxonDump(factory)
     runner.run()
 
 
-def issuers_price_dump(event, context):
+def issuers_price_dump(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     issuer_price_runner = IssuerPriceDump(factory)
@@ -39,7 +39,7 @@ def issuers_price_dump(event, context):
 async def after_csv_dump_invocation(config):
     await asyncio.gather(*[invoke_table_dump(config), invoke_graph_dump(config)])
 
-def csv_dump(event, context):
+def csv_dump(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     runner = CSVDump(factory)
@@ -47,7 +47,7 @@ def csv_dump(event, context):
 
     asyncio.run(after_csv_dump_invocation(config))
 
-def table_dump(event, context):
+def table_dump(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     runner = TableDump(factory)
@@ -55,14 +55,14 @@ def table_dump(event, context):
     loop.run_until_complete(runner.run())
 
 
-def graph_dump(event, context):
+def graph_dump(_event, _context):
     config = Config.from_env()
     factory = Factory(config)
     runner = GraphDumps(factory)
     runner.run()
 
 
-def token_history(event, context):
+def token_history(event, _context):
     token_id = event['pathParameters']['token_id']
     config = Config.from_env()
     factory = Factory(config)
@@ -70,7 +70,7 @@ def token_history(event, context):
     response = fetcher.fetch_history(token_id)
     return response
 
-def account_activity(event, context):
+def account_activity(event, _context):
     address = event['queryStringParameters']['address']
     page_num = int(event['queryStringParameters'].get('page', 1))
     if page_num <= 0:
@@ -82,7 +82,7 @@ def account_activity(event, context):
     response = fetcher.fetch_activity(address, offset)
     return response
 
-def account_nfts(event, context):
+def account_nfts(event, _context):
     address = event['pathParameters']['address']
     page_num = int(event.get('queryStringParameters', {}).get('page', 1))
     if page_num <= 0:

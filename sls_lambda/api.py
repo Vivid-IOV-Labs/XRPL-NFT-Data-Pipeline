@@ -18,7 +18,8 @@ class TokenHistoryAction(Enum):
 
 class TokenHistoryFetcher(BaseLambdaRunner):
     def run(self) -> None:
-        pass
+        # required by the parent class
+        ...
 
     @staticmethod
     def _get_query(token_id: str):
@@ -97,13 +98,7 @@ class TokenHistoryFetcher(BaseLambdaRunner):
                 history.append(burn_offer_action)
         history = sorted(history, key=lambda action: action['date'], reverse=True)
         return {
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Credentials": True,
-                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
-            },
+            "headers": self._get_response_headers(),
             "statusCode": 200,
             "body": base64.b64encode(bytes(json.dumps(history), "utf-8")).decode("utf-8"),
             "isBase64Encoded": True
@@ -113,7 +108,8 @@ class TokenHistoryFetcher(BaseLambdaRunner):
 class AccountActivity(BaseLambdaRunner):
     per_page = 10
     def run(self) -> None:
-        pass
+        # required by the parent class
+        ...
 
     async def _get_account_activity(self, address: str, offset: int):
         db_client = self.factory.get_db_client()
@@ -141,13 +137,7 @@ class AccountActivity(BaseLambdaRunner):
             'timestamp': int(activity[2].timestamp())
         } for activity in nft_activity]
         return {
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Credentials": True,
-                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
-            },
+            "headers": self._get_response_headers(),
             "statusCode": 200,
             "body": base64.b64encode(bytes(json.dumps(data), "utf-8")).decode("utf-8"),
             "isBase64Encoded": True
@@ -157,7 +147,8 @@ class AccountActivity(BaseLambdaRunner):
 class AccountNFTS(BaseLambdaRunner):
     per_page = 10
     def run(self) -> None:
-        pass
+        # required by the parent class
+        ...
 
     async def _get_account_nfts(self, address: str, offset: int):
         db_client = self.factory.get_db_client()
@@ -176,13 +167,7 @@ class AccountNFTS(BaseLambdaRunner):
         nfts = asyncio.run(self._get_account_nfts(address, offset))
         data = [{'token_id': data[0], 'acquired_at': int(data[1].timestamp())} for data in nfts]
         return {
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Credentials": True,
-                "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
-            },
+            "headers": self._get_response_headers(),
             "statusCode": 200,
             "body": base64.b64encode(bytes(json.dumps(data), "utf-8")).decode("utf-8"),
             "isBase64Encoded": True

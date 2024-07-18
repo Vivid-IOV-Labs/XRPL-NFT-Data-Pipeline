@@ -32,7 +32,7 @@ async def dump(cfg: Config):
     try:
         final_data = json.load(open("data/local/addresses/details.json", "r"))
         fetched_addresses = [data['address'] for data in final_data]
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         fetched_addresses = []
         final_data = []
     to_fetch = list(set(addresses) - set(fetched_addresses))
@@ -131,30 +131,3 @@ def upload_to_snowflake(data, connection, table):
     connection.commit()
     cursor.close()
     connection.close()
-
-
-# if __name__ == "__main__":
-#     arg = sys.argv[1]
-#     config = Config.from_env(".env")
-#     if arg == "create-table":
-#         connection = create_snowflake_connection(config)
-#         create_snowflake_table(connection)
-#     elif arg == "dump-data":
-#         asyncio.run(dump(config))
-#     elif arg == "load-data":
-#         num_cols = ["inception", "initial_balance", "genesis"]
-#         df = pd.read_json("data/local/addresses/details.json")
-#         columns = {
-#             "initialBalance": "initial_balance",
-#             "verifiedDomain": "verified_domain",
-#             "ledgerInfo": "ledger_info"
-#         }
-#         df.rename(columns=columns, inplace=True)
-#         df["ledger_info"] = df["ledger_info"].apply(lambda x: json.dumps(x))
-#         df[num_cols] = df[num_cols].fillna(0)
-#         df = df.fillna("")
-#         data = df.to_dict(orient="records")
-#         connection = create_snowflake_connection(config)
-#         upload_to_snowflake(data, connection, "XRPL_ADDRESS_DETAILS")
-#     else:
-#         print("invalid argument")

@@ -100,7 +100,7 @@ class NixerOfferLoader:
                         "offer_type": "buy",
                         "offer_details": None
                     }
-                    if type(buy_offer["Amount"]) != str:
+                    if not isinstance(buy_offer["Amount"], str): # noqa
                         amount_details = buy_offer["Amount"]
                         to_append["amount_value"] = amount_details["value"]
                         to_append["amount_issuer"] = amount_details["issuer"]
@@ -121,7 +121,7 @@ class NixerOfferLoader:
                         "offer_type": "sell",
                         "offer_details": None
                     }
-                    if type(sell_offer["Amount"]) != str:
+                    if not isinstance(sell_offer["Amount"], str): # noqa
                         amount_details = sell_offer["Amount"]
                         to_append["amount_value"] = amount_details["value"]
                         to_append["amount_issuer"] = amount_details["issuer"]

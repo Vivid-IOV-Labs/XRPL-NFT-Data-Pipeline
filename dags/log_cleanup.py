@@ -27,7 +27,7 @@ with DAG(
     AIRFLOW_LOG_PATH = "/Users/teepy/workspace/Peerkat/Python-Serverless-V2/logs"
     clean_scheduler_logs = BashOperator(
         task_id='clean_scheduler_logs',
-        bash_command=f"find $AIRFLOW_HOME/logs -type f -delete"
+        bash_command="find $AIRFLOW_HOME/logs -type f -delete"
     )
     run_post_cleanup = PythonOperator(
         task_id="cleanup-complete",

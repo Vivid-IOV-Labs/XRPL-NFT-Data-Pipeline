@@ -23,7 +23,7 @@ class GraphDumps(BaseLambdaRunner):
         try:
             unix_time = int(file_to_time(path).timestamp())
             df = read_df(f"s3://{self.factory.config.RAW_DUMP_BUCKET}/{path}")
-            df = pd.merge(df, price_df, on="Issuer", how="outer")
+            df = pd.merge(df, price_df, on="Issuer", how="outer", validate='m:m')
             df["Market_Cap"] = df["Circulation"] * df["Price"] / 1000000
             tot = df.select_dtypes(np.number).sum()
             for col in num_col:

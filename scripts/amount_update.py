@@ -14,7 +14,7 @@ class XRPAmountUpdate:
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT amount_issuer, currency, amount, offer_index from nft_buy_sell_offers WHERE currency != '' AND xrp_amount is NULL"  # noqa
+                    "SELECT amount_issuer, currency, amount, offer_index from nft_buy_sell_offers WHERE currency != '' AND xrp_amount is NULL"  # noqa
                 )
                 result = await cursor.fetchall()
                 connection.close()
@@ -57,7 +57,7 @@ class XRPAmountUpdate:
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT nft_token_id, issuer, uri, taxon FROM project_tracker WHERE taxon is not NULL"  # noqa
+                    "SELECT nft_token_id, issuer, uri, taxon FROM project_tracker WHERE taxon is not NULL"  # noqa
                 )
                 result = await cursor.fetchall()
                 connection.close()

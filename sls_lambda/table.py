@@ -47,6 +47,7 @@ class TableDump(BaseLambdaRunner):
             on="issuer",
             how="outer",
             suffixes=("", "_previous"),
+            validate='m:m'
         )
         df["promoted"] = "false"
 
@@ -131,7 +132,6 @@ class TableDump(BaseLambdaRunner):
         )
 
         tweets_df = pd.read_csv(f"s3://{config.DATA_DUMP_BUCKET}/xls20/latest/tweets.csv")
-        # tweets_df = pd.read_csv("data/local/xls20/latest/tweets.csv")
         tweets_df["twitter"] = tweets_df["user_name"]
         profile_img_df = tweets_df[["twitter", "profile_image_url"]].drop_duplicates()
 
@@ -148,14 +148,14 @@ class TableDump(BaseLambdaRunner):
         ] # 7 days back starting from the previous day
         tweets_previous.columns = ["twitter", "tweets_previous", "retweets_previous", "likes_previous"]
 
-        sum = tweets_current.groupby("twitter").sum().reset_index(level=0)  # noqa
+        sum_total = tweets_current.groupby("twitter").sum().reset_index(level=0)  # noqa
         sum_previous = tweets_previous.groupby("twitter").sum().reset_index(level=0)
 
         df["twitter_new"] = df["twitter"].str.lower()
-        sum["twitter_new"] = sum["twitter"].str.lower()
+        sum_total["twitter_new"] = sum_total["twitter"].str.lower()
         sum_previous["twitter_new"] = sum_previous["twitter"].str.lower()
         profile_img_df["twitter_new"] = profile_img_df["twitter"].str.lower()
-        df = pd.merge(df, sum, on="twitter_new", how="left")
+        df = pd.merge(df, sum_total, on="twitter_new", how="left")
         df = pd.merge(df, sum_previous, on="twitter_new", how="left")
         df = pd.merge(df, profile_img_df, on="twitter_new", how="left")
 

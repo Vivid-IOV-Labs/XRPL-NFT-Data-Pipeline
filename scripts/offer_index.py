@@ -44,16 +44,13 @@ async def fetch_offer_index(offer_hash: str):
 async def dump():
     offer_hashes = pd.read_csv(INPUT_FILE)["HASH"].to_list()
     final_data = []
-    # null_offer_hashes = []
     try:
         final_data = json.load(open("data/local/offer-index/offer-index-details-2.json", "r"))
         fetched_index = [data['hash'] for data in final_data]
-        # null_offer_hashes = [data['hash'] for data in final_data if data['offer_index'] is None]
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         fetched_index = []
         final_data = []
     to_fetch = list(set(offer_hashes) - set(fetched_index))
-    # print(len(null_offer_hashes), len(offer_hashes), len(final_data))
     for chunk in chunks(to_fetch, 50):
         details = await asyncio.gather(*[fetch_offer_index(address) for address in chunk])
         final_data.extend([detail for detail in details if detail is not None])

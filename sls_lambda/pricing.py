@@ -30,11 +30,15 @@ class TaxonPriceDump(PricingLambdaRunner):
         super().__init__(factory)
         self._set_writer("taxon-price")
 
+    @staticmethod
+    def _get_issuer_str(issuers):
+        return ",".join("'{0}'".format(issuer) for issuer in issuers)
+
     async def _get_taxon_price_summary(self, issuers):
         pool = await self.db_client.create_db_pool()
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
+                issuers_str = self._get_issuer_str(issuers)
                 query = f"SELECT issuer, taxon, MIN(floor_price) AS floor_price, MAX(max_buy_offer) AS max_buy_offer FROM nft_pricing_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer, taxon"
                 await cursor.execute(query)
                 result = await cursor.fetchall()
@@ -45,7 +49,7 @@ class TaxonPriceDump(PricingLambdaRunner):
         pool = await self.db_client.create_db_pool()
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                issuers_str = ",".join("'{0}'".format(issuer) for issuer in issuers)
+                issuers_str = self._get_issuer_str(issuers)
                 query = f"SELECT issuer, taxon, SUM(volume) as volume from nft_volume_summary WHERE burn_offer_hash is NULL AND issuer IN ({issuers_str}) GROUP BY issuer, taxon"
                 await cursor.execute(query)
                 result = await cursor.fetchall()
@@ -118,7 +122,7 @@ class IssuerPriceDump(PricingLambdaRunner):
         )
 
     def _run(self, issuer):
-        pass
+        print('running...')
 
     async def run(self) -> None:
         issuers = self.factory.supported_issuers

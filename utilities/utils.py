@@ -33,7 +33,6 @@ def fetch_issuer_taxons(issuer, environment, bucket, access_key, secret_key):
 
 def fetch_issuer_tokens(issuer, environment, bucket, access_key, secret_key):
     last_hour = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H")
-    # last_hour = "2022-12-11-13"
     if environment == "LOCAL":
         last_hour = "2022-12-11-13"
         data = json.load(open(f"data/nfts/{last_hour}/{issuer}.json", "r"))
@@ -108,8 +107,6 @@ def twitter_pics(prof_img):
 
 
 def file_to_time(t):
-    # print(t)
-    # print(t[:4], t[5:7], t[8:10], t[11:13])
     return datetime.datetime(int(t[:4]), int(t[5:7]), int(t[8:10]), int(t[11:13]))
 
 
@@ -215,7 +212,6 @@ def get_monthly_df(df: pd.DataFrame, max_points: int):
             points.append({"x": to_append["x"][0], "y": to_append["y"][0]})
         except Exception as e:
             print(f"Error extracting value for timestamp {current_time - 3600}: {e}")
-            pass
         current_time -= 3600
         points_traversed += 1
     return pd.DataFrame(points[::-1])

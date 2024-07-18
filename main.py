@@ -172,8 +172,6 @@ if __name__ == "__main__":
                 exit(1)
             fetcher = TokenHistoryFetcher(factory)
             response = fetcher.fetch_history(token_id)
-            # for data in response:
-            #     print(data['action'])
         elif endpoint == "account-activity":
             if address is None:
                 logger.error('Address required')
